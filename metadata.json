@@ -1,0 +1,12 @@
+{
+  "name": "Latimore Hub OS",
+  "description": "A revenue and operations command center for Latimore Life & Legacy LLC, featuring AI-powered workflow automations and strategic command interfaces.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone",
+    "geolocation"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
