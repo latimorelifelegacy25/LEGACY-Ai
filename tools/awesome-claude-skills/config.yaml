@@ -1,0 +1,30 @@
+version: "1.0"
+
+# Data sources configuration for Claude Code skills
+sources:
+  - id: "awesome-repo-configs"
+    url: "https://raw.githubusercontent.com/Chat2AnyLLM/awesome-repo-configs/main/skill_repos.json"
+    enabled: true
+    priority: 1
+    timeout: 30
+
+  - id: "claude-skill-repos"  # Using your fork that has the missing jeremylongshore/claude-code-plugins-plus-skills repo
+    url: "https://raw.githubusercontent.com/zhujian0805/code-assistant-manager/main/code_assistant_manager/skill_repos.json"
+    format: "json"
+    enabled: true
+    priority: 2
+    timeout: 30
+
+# Generation settings
+generation:
+  output_file: "README.md"
+  include_marketplace_tables: true
+  include_skill_categories: true
+
+# Parallel processing settings
+parallel:
+  max_workers: 8  # Maximum number of concurrent repository processing threads
+
+# Logging settings
+logging:
+  level: "INFO"

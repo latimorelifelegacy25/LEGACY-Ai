@@ -1,0 +1,61 @@
+name: Update Skills README
+
+permissions:
+  contents: write
+
+on:
+  schedule:
+    # Run hourly
+    - cron: '0 * * * *'
+  workflow_dispatch: # Allow manual triggering
+  repository_dispatch:
+    types: [config-updated]
+
+jobs:
+  update-readme:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        # Fetch full history for proper diff detection
+        fetch-depth: 0
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.8'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Run skill scraper
+      run: |
+        python -m scripts.skill_scraper generate-readme --force
+
+    - name: Check for changes
+      id: verify-changed-files
+      run: |
+        if [ -n "$(git status --porcelain)" ]; then
+          echo "changed=true" >> $GITHUB_OUTPUT
+        else
+          echo "changed=false" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Commit and push changes
+      if: steps.verify-changed-files.outputs.changed == 'true'
+      env:
+        PERSONAL_ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git remote set-url origin https://x-access-token:${PERSONAL_ACCESS_TOKEN}@github.com/${{ github.repository }}.git
+        git add README.md FULL-SKILLS.md domains/
+        git commit -m "🤖 Update README with latest skills
+
+        Auto-generated from skill scraper
+        Generated with GitHub Actions"
+        git push
