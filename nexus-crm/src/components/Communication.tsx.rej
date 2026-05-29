@@ -1,0 +1,12 @@
+--- src/components/Communication.tsx
++++ src/components/Communication.tsx
+@@ -153,7 +153,8 @@
+ 
+   const deleteActivity = async (id: string) => {
+     try {
+-      await dbService.delete('activities', id);
++      if (!auth.currentUser) return;
++      await dbService.delete('activities', id, auth.currentUser.uid);
+     } catch (error) {
+       console.error("Error deleting activity:", error);
+     }

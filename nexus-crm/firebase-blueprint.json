@@ -1,0 +1,118 @@
+{
+  "entities": {
+    "user": {
+      "title": "User Profile",
+      "description": "User account information",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "displayName": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "photoURL": { "type": "string" },
+        "role": { "type": "string", "enum": ["admin", "user"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email"]
+    },
+    "contact": {
+      "title": "Contact",
+      "description": "CRM contact information",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "firstName": { "type": "string" },
+        "lastName": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "phone": { "type": "string" },
+        "company": { "type": "string" },
+        "status": { "type": "string", "enum": ["lead", "prospect", "customer", "lost"] },
+        "ownerUid": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["firstName", "lastName", "email", "ownerUid"]
+    },
+    "deal": {
+      "title": "Deal",
+      "description": "Sales pipeline deal",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "value": { "type": "number" },
+        "stage": { "type": "string", "enum": ["new", "qualified", "proposal", "negotiation", "won", "lost"] },
+        "contactId": { "type": "string" },
+        "ownerUid": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "value", "stage", "ownerUid"]
+    },
+    "activity": {
+      "title": "Activity",
+      "description": "Communication log (email, call, task)",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "type": { "type": "string", "enum": ["email", "call", "task", "meeting"] },
+        "subject": { "type": "string" },
+        "description": { "type": "string" },
+        "contactId": { "type": "string" },
+        "ownerUid": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["type", "subject", "ownerUid", "timestamp"]
+    },
+    "content": {
+      "title": "AI Content",
+      "description": "AI generated marketing content",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "prompt": { "type": "string" },
+        "result": { "type": "string" },
+        "type": { "type": "string", "enum": ["email", "social", "blog", "ad"] },
+        "ownerUid": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["prompt", "result", "type", "ownerUid"]
+    },
+    "social_account": {
+      "title": "Social Account",
+      "description": "Connected social media account",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "platform": { "type": "string", "enum": ["twitter", "linkedin", "facebook"] },
+        "name": { "type": "string" },
+        "profileImage": { "type": "string" },
+        "ownerUid": { "type": "string" },
+        "connectedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["platform", "name", "ownerUid"]
+    },
+    "social_post": {
+      "title": "Social Post",
+      "description": "Scheduled or posted social media content",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "content": { "type": "string" },
+        "platforms": { "type": "array", "items": { "type": "string" } },
+        "scheduledAt": { "type": "string", "format": "date-time" },
+        "status": { "type": "string", "enum": ["draft", "scheduled", "posted"] },
+        "ownerUid": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["content", "platforms", "status", "ownerUid"]
+    }
+  },
+  "firestore": {
+    "/users/{uid}": { "schema": "user", "description": "User profiles" },
+    "/contacts/{contactId}": { "schema": "contact", "description": "CRM contacts" },
+    "/deals/{dealId}": { "schema": "deal", "description": "Sales deals" },
+    "/activities/{activityId}": { "schema": "activity", "description": "Activity logs" },
+    "/contents/{contentId}": { "schema": "content", "description": "AI generated content" },
+    "/social_accounts/{accountId}": { "schema": "social_account", "description": "Social accounts" },
+    "/social_posts/{postId}": { "schema": "social_post", "description": "Social posts" }
+  }
+}

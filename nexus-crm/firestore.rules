@@ -1,0 +1,92 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    function isDocOwner() {
+      return isAuthenticated() && request.auth.uid == resource.data.ownerUid;
+    }
+
+    function isValidUser(data) {
+      return data.uid is string && data.email is string;
+    }
+
+    function isValidContact(data) {
+      return data.firstName is string && data.lastName is string && data.email is string && data.ownerUid == request.auth.uid;
+    }
+
+    function isValidDeal(data) {
+      return data.title is string && data.value is number && data.ownerUid == request.auth.uid;
+    }
+
+    function isValidActivity(data) {
+      return data.type in ['email', 'call', 'task', 'meeting'] && data.ownerUid == request.auth.uid;
+    }
+
+    function isValidContent(data) {
+      return data.prompt is string && data.result is string && data.ownerUid == request.auth.uid;
+    }
+
+    function isValidSocialAccount(data) {
+      return data.platform in ['twitter', 'linkedin', 'facebook'] && data.ownerUid == request.auth.uid;
+    }
+
+    function isValidSocialPost(data) {
+      return data.content is string && data.platforms is list && data.ownerUid == request.auth.uid;
+    }
+
+    match /users/{uid} {
+      allow read: if isAuthenticated();
+      allow write: if isOwner(uid) && isValidUser(request.resource.data);
+    }
+
+    match /contacts/{contactId} {
+      allow read: if isDocOwner();
+      allow create: if isAuthenticated() && isValidContact(request.resource.data);
+      allow update: if isDocOwner() && isValidContact(request.resource.data);
+      allow delete: if isDocOwner();
+    }
+
+    match /deals/{dealId} {
+      allow read: if isDocOwner();
+      allow create: if isAuthenticated() && isValidDeal(request.resource.data);
+      allow update: if isDocOwner() && isValidDeal(request.resource.data);
+      allow delete: if isDocOwner();
+    }
+
+    match /activities/{activityId} {
+      allow read: if isDocOwner();
+      allow create: if isAuthenticated() && isValidActivity(request.resource.data);
+      allow update: if isDocOwner() && isValidActivity(request.resource.data);
+      allow delete: if isDocOwner();
+    }
+
+    match /contents/{contentId} {
+      allow read: if isDocOwner();
+      allow create: if isAuthenticated() && isValidContent(request.resource.data);
+      allow update: if isDocOwner() && isValidContent(request.resource.data);
+      allow delete: if isDocOwner();
+    }
+
+    match /social_accounts/{accountId} {
+      allow read: if isDocOwner();
+      allow create: if isAuthenticated() && isValidSocialAccount(request.resource.data);
+      allow update: if isDocOwner() && isValidSocialAccount(request.resource.data);
+      allow delete: if isDocOwner();
+    }
+
+    match /social_posts/{postId} {
+      allow read: if isDocOwner();
+      allow create: if isAuthenticated() && isValidSocialPost(request.resource.data);
+      allow update: if isDocOwner() && isValidSocialPost(request.resource.data);
+      allow delete: if isDocOwner();
+    }
+  }
+}

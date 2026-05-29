@@ -1,0 +1,66 @@
+--- src/services/googleService.ts
++++ src/services/googleService.ts
+@@ -37,20 +37,31 @@
+   end: string;   // ISO String
+ }
+ 
+-// Helper to safely Base64Url encode HTML/MIME text cleanly
+-function base64urlEncode(str: string): string {
+-  // Use UTF-8 safe base64 encoding
++const encodeBase64 = (str: string): string => {
+   const bytes = new TextEncoder().encode(str);
+   let binary = '';
+   const len = bytes.byteLength;
+   for (let i = 0; i < len; i++) {
+     binary += String.fromCharCode(bytes[i]);
+   }
+-  return btoa(binary)
++  return btoa(binary);
++};
++
++const base64urlEncode = (str: string): string =>
++  encodeBase64(str)
+     .replace(/\+/g, '-')
+     .replace(/\//g, '_')
+     .replace(/=+$/, '');
+-}
++
++const sanitizeMimeHeader = (value: string): string => value.replace(/[\r\n]+/g, ' ').trim();
++
++const escapeHtml = (value: string): string =>
++  value
++    .replace(/&/g, '&amp;')
++    .replace(/</g, '&lt;')
++    .replace(/>/g, '&gt;')
++    .replace(/"/g, '&quot;')
++    .replace(/'/g, '&#39;');
+ 
+ /**
+  * Service routing all Google Workspace endpoints
+@@ -116,15 +127,22 @@
+     body: string
+   ): Promise<any> {
+     const url = 'https://gmail.googleapis.com/gmail/v1/users/me/messages/send';
+-    
+-    const formattedSubject = `Subject: =?utf-8?B?${btoa(unescape(encodeURIComponent(subject)))}?=`;
++    const safeTo = sanitizeMimeHeader(to);
++    const safeSubject = sanitizeMimeHeader(subject);
++    const safeBody = escapeHtml(body).replace(/\r?\n/g, '<br />');
++
++    if (!safeTo) {
++      throw new Error('Recipient email is required before sending via Gmail.');
++    }
++
++    const formattedSubject = `Subject: =?utf-8?B?${encodeBase64(safeSubject)}?=`;
+     const mimeMessage = [
+-      `To: ${to}`,
++      `To: ${safeTo}`,
+       'Content-Type: text/html; charset=utf-8',
+       'MIME-Version: 1.0',
+       formattedSubject,
+       '',
+-      body.replace(/\n/g, '<br />')
++      safeBody
+     ].join('\r\n');
+ 
+     const raw = base64urlEncode(mimeMessage);

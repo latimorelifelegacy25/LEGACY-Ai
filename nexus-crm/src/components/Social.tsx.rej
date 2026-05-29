@@ -1,0 +1,12 @@
+--- src/components/Social.tsx
++++ src/components/Social.tsx
+@@ -103,7 +103,8 @@
+ 
+   const deletePost = async (id: string) => {
+     try {
+-      await dbService.delete('social_posts', id);
++      if (!auth.currentUser) return;
++      await dbService.delete('social_posts', id, auth.currentUser.uid);
+     } catch (error) {
+       console.error("Error deleting post:", error);
+     }

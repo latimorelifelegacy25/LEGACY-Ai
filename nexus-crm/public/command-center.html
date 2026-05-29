@@ -1,0 +1,2190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Latimore Unified Revenue Workflow OS</title>
+<style>
+:root {
+  --navy:#172331;
+  --navy-2:#1e2d3d;
+  --navy-3:#26384b;
+  --gold:#e8b87a;
+  --gold-2:#f4d3a6;
+  --green:#65d98f;
+  --amber:#f7c762;
+  --red:#ff8d8d;
+  --blue:#93c8fa;
+  --text:#f7f7f7;
+  --muted:#b9c3d0;
+  --dim:#7e8fa3;
+  --border:rgba(232,184,122,.24);
+  --border-2:rgba(232,184,122,.46);
+  --surface:rgba(30,45,61,.92);
+  --shadow:0 18px 50px rgba(0,0,0,.24);
+}
+[data-theme="light"] {
+  --navy:#f6f2ec;
+  --navy-2:#ffffff;
+  --navy-3:#f0e6d8;
+  --gold:#9b6432;
+  --gold-2:#5b3b20;
+  --green:#157347;
+  --amber:#9b6508;
+  --red:#b42318;
+  --blue:#175cd3;
+  --text:#172331;
+  --muted:#44556a;
+  --dim:#66768a;
+  --border:rgba(23,35,49,.16);
+  --border-2:rgba(23,35,49,.28);
+  --surface:rgba(255,255,255,.96);
+  --shadow:0 18px 50px rgba(51,35,20,.12);
+}
+* { box-sizing:border-box; }
+html, body { margin:0; min-height:100%; }
+body {
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background:
+    radial-gradient(circle at top left, rgba(232,184,122,.16), transparent 36rem),
+    linear-gradient(135deg, var(--navy), #111923 70%);
+  color:var(--text);
+}
+[data-theme="light"] body,
+body[data-theme="light"] {
+  background:
+    radial-gradient(circle at top left, rgba(196,154,108,.18), transparent 34rem),
+    linear-gradient(135deg, #f9f6f0, #f0e8dc);
+}
+button, input, select, textarea { font:inherit; }
+button { cursor:pointer; }
+button:disabled { cursor:not-allowed; opacity:.58; }
+a { color:inherit; }
+.app {
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+}
+.topbar {
+  position:sticky;
+  top:0;
+  z-index:20;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:1rem;
+  padding:.85rem 1.15rem;
+  background:rgba(23,35,49,.86);
+  backdrop-filter: blur(16px);
+  border-bottom:1px solid var(--border-2);
+}
+[data-theme="light"] .topbar { background:rgba(255,255,255,.86); }
+.brand {
+  display:flex;
+  align-items:center;
+  gap:.75rem;
+  min-width:0;
+}
+.logo-mark {
+  width:38px;
+  height:38px;
+  border-radius:10px;
+  display:grid;
+  place-items:center;
+  background:var(--gold);
+  color:#172331;
+  font-weight:900;
+  letter-spacing:.06em;
+  box-shadow:0 10px 24px rgba(232,184,122,.22);
+}
+.brand h1 {
+  margin:0;
+  color:var(--gold-2);
+  font-size:1.02rem;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+  line-height:1.05;
+}
+.brand p { margin:.12rem 0 0; color:var(--muted); font-size:.74rem; }
+.top-actions {
+  display:flex;
+  align-items:center;
+  gap:.55rem;
+  flex-wrap:wrap;
+  justify-content:flex-end;
+}
+.status-pill, .mini-pill {
+  display:inline-flex;
+  align-items:center;
+  gap:.38rem;
+  border:1px solid var(--border);
+  color:var(--gold-2);
+  background:rgba(232,184,122,.08);
+  border-radius:999px;
+  padding:.38rem .7rem;
+  font-size:.74rem;
+  white-space:nowrap;
+}
+.status-dot {
+  width:8px;
+  height:8px;
+  border-radius:50%;
+  background:var(--green);
+  box-shadow:0 0 0 4px rgba(101,217,143,.13);
+}
+.icon-btn, .primary-btn, .ghost-btn, .danger-btn {
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:.62rem .78rem;
+  color:var(--text);
+  background:rgba(255,255,255,.04);
+  transition:.16s ease;
+}
+.icon-btn:hover, .ghost-btn:hover {
+  transform:translateY(-1px);
+  border-color:var(--border-2);
+  background:rgba(232,184,122,.08);
+}
+.primary-btn {
+  border-color:rgba(232,184,122,.55);
+  background:linear-gradient(135deg, rgba(232,184,122,.25), rgba(232,184,122,.08));
+  color:var(--gold-2);
+  font-weight:800;
+}
+.primary-btn:hover { transform:translateY(-1px); box-shadow:0 10px 26px rgba(0,0,0,.16); }
+.danger-btn { border-color:rgba(255,141,141,.38); color:var(--red); }
+.shell {
+  width:min(1480px, 100%);
+  margin:0 auto;
+  padding:1rem;
+  display:grid;
+  grid-template-columns:290px minmax(0, 1fr);
+  gap:1rem;
+  flex:1;
+}
+.sidebar {
+  position:sticky;
+  top:76px;
+  align-self:start;
+  max-height:calc(100vh - 92px);
+  overflow:auto;
+  padding:1rem;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:22px;
+  box-shadow:var(--shadow);
+}
+.nav-title {
+  color:var(--dim);
+  font-size:.72rem;
+  font-weight:800;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  margin:.35rem .35rem .65rem;
+}
+.nav-list { display:flex; flex-direction:column; gap:.35rem; }
+.nav-btn {
+  display:flex;
+  align-items:center;
+  gap:.65rem;
+  width:100%;
+  border:1px solid transparent;
+  border-radius:14px;
+  padding:.75rem .78rem;
+  background:transparent;
+  color:var(--muted);
+  text-align:left;
+}
+.nav-btn span:first-child { width:1.25rem; text-align:center; }
+.nav-btn.active {
+  background:rgba(232,184,122,.13);
+  border-color:var(--border);
+  color:var(--gold-2);
+}
+.nav-btn:hover { background:rgba(255,255,255,.04); color:var(--text); }
+.sidebar-card {
+  margin-top:1rem;
+  border:1px solid var(--border);
+  border-radius:18px;
+  padding:1rem;
+  background:rgba(255,255,255,.035);
+}
+.sidebar-card h3 {
+  margin:0 0 .8rem;
+  font-size:.78rem;
+  text-transform:uppercase;
+  letter-spacing:.12em;
+  color:var(--gold-2);
+}
+.mini-grid { display:grid; grid-template-columns:1fr 1fr; gap:.6rem; }
+.mini-stat {
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:.75rem;
+  background:rgba(0,0,0,.08);
+}
+.mini-stat strong { display:block; font-size:1.1rem; }
+.mini-stat span { display:block; color:var(--dim); font-size:.72rem; margin-top:.18rem; }
+.main {
+  min-width:0;
+}
+.view { display:none; animation:fade .18s ease; }
+.view.active { display:block; }
+@keyframes fade { from { opacity:.3; transform:translateY(4px); } to { opacity:1; transform:none; } }
+.hero {
+  border:1px solid var(--border);
+  border-radius:24px;
+  padding:1.1rem;
+  background:
+    radial-gradient(circle at top right, rgba(232,184,122,.16), transparent 25rem),
+    var(--surface);
+  box-shadow:var(--shadow);
+  margin-bottom:1rem;
+}
+.hero-row {
+  display:flex;
+  justify-content:space-between;
+  gap:1rem;
+  align-items:flex-start;
+}
+.hero h2 { margin:0; font-size:1.3rem; color:var(--gold-2); }
+.hero p { margin:.35rem 0 0; color:var(--muted); line-height:1.55; }
+.card, .panel-card {
+  border:1px solid var(--border);
+  border-radius:22px;
+  padding:1rem;
+  background:var(--surface);
+  box-shadow:var(--shadow);
+}
+.grid {
+  display:grid;
+  gap:1rem;
+}
+.grid.kpis { grid-template-columns:repeat(4, minmax(0, 1fr)); }
+.grid.two { grid-template-columns:1fr 1fr; }
+.grid.three { grid-template-columns:repeat(3, minmax(0, 1fr)); }
+.grid.sidebar-main { grid-template-columns:minmax(280px, .42fr) minmax(0, 1fr); }
+.kpi {
+  min-height:124px;
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+}
+.kpi .label {
+  display:flex;
+  justify-content:space-between;
+  gap:.5rem;
+  color:var(--muted);
+  font-size:.78rem;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+}
+.kpi .value {
+  margin-top:.75rem;
+  font-size:2rem;
+  font-weight:900;
+  letter-spacing:-.04em;
+}
+.kpi .delta { color:var(--green); font-size:.78rem; margin-top:.35rem; }
+.section-title {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:1rem;
+  margin:0 0 .8rem;
+}
+.section-title h3 {
+  margin:0;
+  color:var(--gold-2);
+  font-size:.98rem;
+}
+.section-title p, .muted { color:var(--muted); }
+.muted { font-size:.88rem; line-height:1.55; }
+.row {
+  display:flex;
+  align-items:center;
+  gap:.65rem;
+  flex-wrap:wrap;
+}
+.stack { display:flex; flex-direction:column; gap:.8rem; }
+.metric-row {
+  padding:.78rem;
+  border:1px solid var(--border);
+  border-radius:16px;
+  background:rgba(255,255,255,.035);
+}
+.metric-head {
+  display:flex;
+  justify-content:space-between;
+  color:var(--text);
+  font-weight:700;
+  font-size:.9rem;
+  margin-bottom:.55rem;
+}
+.bar {
+  height:10px;
+  background:rgba(255,255,255,.08);
+  border-radius:999px;
+  overflow:hidden;
+  display:flex;
+}
+.bar span { display:block; height:100%; }
+.bar .base { background:rgba(185,195,208,.45); }
+.bar .gain { background:var(--gold); }
+.alert {
+  border:1px solid rgba(247,199,98,.35);
+  background:rgba(247,199,98,.09);
+  color:var(--text);
+  border-radius:18px;
+  padding:.9rem;
+}
+.alert strong { color:var(--amber); }
+.tag, .badge {
+  display:inline-flex;
+  align-items:center;
+  border:1px solid var(--border);
+  border-radius:999px;
+  padding:.22rem .55rem;
+  font-size:.72rem;
+  color:var(--gold-2);
+  background:rgba(232,184,122,.08);
+}
+.badge.green { color:var(--green); border-color:rgba(101,217,143,.32); background:rgba(101,217,143,.08); }
+.badge.red { color:var(--red); border-color:rgba(255,141,141,.32); background:rgba(255,141,141,.08); }
+.badge.amber { color:var(--amber); border-color:rgba(247,199,98,.32); background:rgba(247,199,98,.08); }
+.card-title {
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:.8rem;
+  margin-bottom:.7rem;
+}
+.card-title h3, .card-title h4 {
+  margin:0;
+  color:var(--text);
+}
+.workflow-card, .template-card, .comment-card, .schedule-card, .folder-card, .doc-card {
+  border:1px solid var(--border);
+  border-radius:18px;
+  padding:1rem;
+  background:rgba(255,255,255,.035);
+}
+.workflow-card.done { border-color:rgba(101,217,143,.5); background:rgba(101,217,143,.06); }
+.workflow-card h3 { font-size:1rem; color:var(--gold-2); margin:0; }
+.workflow-card p, .template-card p, .comment-card p { color:var(--muted); line-height:1.55; font-size:.88rem; }
+.form {
+  display:grid;
+  gap:.8rem;
+}
+label {
+  display:block;
+  color:var(--muted);
+  font-size:.78rem;
+  font-weight:800;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  margin-bottom:.35rem;
+}
+input, textarea, select {
+  width:100%;
+  border:1px solid var(--border);
+  border-radius:14px;
+  color:var(--text);
+  background:rgba(0,0,0,.18);
+  padding:.78rem;
+  outline:none;
+}
+[data-theme="light"] input, [data-theme="light"] textarea, [data-theme="light"] select {
+  background:#fff;
+}
+textarea { min-height:132px; resize:vertical; line-height:1.5; }
+.output {
+  white-space:pre-wrap;
+  line-height:1.55;
+  border:1px solid var(--border);
+  border-radius:18px;
+  padding:1rem;
+  background:rgba(0,0,0,.18);
+  color:var(--text);
+  min-height:180px;
+}
+.hooks button {
+  width:100%;
+  text-align:left;
+  margin-top:.5rem;
+}
+.comment-meta, .small {
+  color:var(--dim);
+  font-size:.76rem;
+}
+.analysis-grid {
+  display:grid;
+  grid-template-columns:repeat(4, minmax(0, 1fr));
+  gap:.55rem;
+}
+.analysis-box {
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:.65rem;
+  background:rgba(0,0,0,.12);
+}
+.analysis-box span { display:block; color:var(--dim); font-size:.7rem; text-transform:uppercase; }
+.analysis-box strong { display:block; margin-top:.2rem; font-size:.84rem; }
+.folder-list {
+  display:grid;
+  gap:.6rem;
+  margin-top:.7rem;
+}
+.file-row {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:.6rem;
+  border-top:1px solid var(--border);
+  padding:.55rem 0 0;
+  margin-top:.55rem;
+  font-size:.84rem;
+}
+.file-row:first-child { border-top:0; padding-top:0; margin-top:0; }
+.terminal {
+  border:1px solid var(--border-2);
+  border-radius:20px;
+  background:#070d13;
+  color:#d6f6d6;
+  overflow:hidden;
+  min-height:500px;
+  display:flex;
+  flex-direction:column;
+}
+[data-theme="light"] .terminal { background:#101820; color:#d6f6d6; }
+.term-head {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:.8rem 1rem;
+  border-bottom:1px solid rgba(232,184,122,.25);
+  background:rgba(232,184,122,.07);
+}
+.term-output {
+  flex:1;
+  overflow:auto;
+  padding:1rem;
+  font-family:"SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size:.86rem;
+  line-height:1.55;
+  max-height:500px;
+}
+.term-line.dim { color:#7f93a8; }
+.term-line.gold { color:#f4d3a6; }
+.term-line.err { color:#ff8d8d; }
+.term-line.ok { color:#65d98f; }
+.term-input {
+  display:flex;
+  gap:.5rem;
+  padding:.85rem;
+  border-top:1px solid rgba(232,184,122,.25);
+}
+.term-input input {
+  font-family:"SFMono-Regular", Consolas, monospace;
+  background:rgba(255,255,255,.05);
+  border-radius:12px;
+}
+.modal-backdrop {
+  position:fixed;
+  inset:0;
+  z-index:50;
+  background:rgba(0,0,0,.66);
+  display:none;
+  place-items:center;
+  padding:1rem;
+}
+.modal-backdrop.show { display:grid; }
+.modal {
+  width:min(880px, 100%);
+  max-height:88vh;
+  overflow:auto;
+  border:1px solid var(--border-2);
+  border-radius:24px;
+  background:var(--navy-2);
+  box-shadow:0 24px 80px rgba(0,0,0,.4);
+  padding:1rem;
+}
+.toast {
+  position:fixed;
+  right:1rem;
+  bottom:1rem;
+  z-index:80;
+  display:none;
+  width:min(420px, calc(100vw - 2rem));
+  border:1px solid var(--border-2);
+  border-radius:18px;
+  padding:.85rem 1rem;
+  background:var(--navy-2);
+  box-shadow:var(--shadow);
+  color:var(--text);
+}
+.toast.show { display:block; animation:fade .15s ease; }
+.hidden { display:none !important; }
+.print-only { display:none; }
+
+@media (max-width: 1040px) {
+  .shell { grid-template-columns:1fr; }
+  .sidebar { position:relative; top:auto; max-height:none; }
+  .nav-list { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); }
+  .grid.kpis, .grid.three, .grid.two, .grid.sidebar-main { grid-template-columns:1fr; }
+  .analysis-grid { grid-template-columns:1fr 1fr; }
+}
+@media (max-width: 620px) {
+  .topbar, .hero-row { flex-direction:column; align-items:stretch; }
+  .nav-list { grid-template-columns:1fr; }
+  .analysis-grid { grid-template-columns:1fr; }
+}
+@media print {
+  .topbar, .sidebar, .no-print { display:none !important; }
+  body { background:white; color:#111; }
+  .shell { display:block; padding:0; }
+  .view { display:block !important; page-break-after:always; }
+  .card, .hero, .panel-card { box-shadow:none; border-color:#ccc; color:#111; background:white; }
+}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo-mark">LL</div>
+      <div>
+        <h1>Latimore Unified Command Center</h1>
+        <p>Revenue OS · Brand Workflow · Marketing Intelligence · Agent Terminal</p>
+      </div>
+    </div>
+    <div class="top-actions">
+      <span class="status-pill"><span class="status-dot"></span><span id="agent-status">Agent idle</span></span>
+      <button class="ghost-btn" id="run-workflow-btn">Run Workflow</button>
+      <button class="ghost-btn" id="print-btn">Print Report</button>
+      <button class="icon-btn" id="theme-btn" title="Toggle theme">☀️</button>
+    </div>
+  </header>
+
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="nav-title">Operating Modules</div>
+      <nav class="nav-list" id="nav-list">
+        <button class="nav-btn active" data-view="overview"><span>📊</span><span>Overview</span></button>
+        <button class="nav-btn" data-view="workflow"><span>🧭</span><span>Workflow OS</span></button>
+        <button class="nav-btn" data-view="templates"><span>📚</span><span>Templates</span></button>
+        <button class="nav-btn" data-view="creator"><span>✨</span><span>Content AI</span></button>
+        <button class="nav-btn" data-view="comments"><span>💬</span><span>Comments</span><span class="badge amber" id="comment-count">0</span></button>
+        <button class="nav-btn" data-view="schedule"><span>📅</span><span>Schedule</span></button>
+        <button class="nav-btn" data-view="files"><span>🗂️</span><span>Files</span></button>
+        <button class="nav-btn" data-view="agent"><span>⌨️</span><span>Agent</span></button>
+        <button class="nav-btn" data-view="reports"><span>📄</span><span>Reports</span></button>
+      </nav>
+
+      <div class="sidebar-card">
+        <h3>Revenue Pulse</h3>
+        <div class="mini-grid">
+          <div class="mini-stat"><strong>3</strong><span>Policies / mo</span></div>
+          <div class="mini-stat"><strong>18%</strong><span>Referral rate</span></div>
+          <div class="mini-stat"><strong>$8.4k</strong><span>Pipeline</span></div>
+          <div class="mini-stat"><strong>13d</strong><span>CFA window</span></div>
+        </div>
+      </div>
+
+      <div class="sidebar-card">
+        <h3>Source Merge</h3>
+        <div id="source-files" class="stack"></div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <section class="view active" id="view-overview"></section>
+      <section class="view" id="view-workflow"></section>
+      <section class="view" id="view-templates"></section>
+      <section class="view" id="view-creator"></section>
+      <section class="view" id="view-comments"></section>
+      <section class="view" id="view-schedule"></section>
+      <section class="view" id="view-files"></section>
+      <section class="view" id="view-agent"></section>
+      <section class="view" id="view-reports"></section>
+    </main>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="modal-backdrop">
+  <div class="modal">
+    <div class="section-title">
+      <div>
+        <h3 id="modal-title">Prompt</h3>
+        <p class="muted" id="modal-subtitle"></p>
+      </div>
+      <button class="icon-btn" id="modal-close">✕</button>
+    </div>
+    <textarea id="modal-text" style="min-height:420px"></textarea>
+    <div class="row" style="justify-content:flex-end;margin-top:.75rem">
+      <button class="ghost-btn" id="modal-copy">Copy Prompt</button>
+      <button class="primary-btn" id="modal-send">Send to Agent</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const INITIAL_DATA = {
+  "sourceFiles": [
+    "latimore-hub-agent-v2.html",
+    "latimore_revenue_workflow_os.html",
+    "ai_engagement_dashboard-1.tsx",
+    "workflow.skill.zip"
+  ],
+  "workflowMeta": {
+    "name": "Latimore Brand OS & Content Builder Workflow",
+    "description": "End-to-end Latimore Life & Legacy LLC workflow that loads the brand manual, builds guardrails, reviews and rewrites assets, generates KPI-aligned CTAs, creates new content, detects brand drift, produces visual briefs, and assembles school district proposals.",
+    "tags": [
+      "brand governance",
+      "content creation",
+      "latimore life and legacy",
+      "kpi aligned messaging",
+      "school district proposals"
+    ]
+  },
+  "workflowNodes": [
+    {
+      "id": "2",
+      "label": "🚀 Brand Context Setup",
+      "title": "Brand Context Setup",
+      "prompt": "You are the Brand Governance System for Latimore Life & Legacy LLC.\n\nTask:\nIngest the full brand manual and construct an internal mental model of the brand that you will use consistently in later steps.\n\nInputs:\n- {brand_manual_text}\n\nUse the following non-negotiable elements as overlays on top of {brand_manual_text} (do not contradict them even if the source text is weaker or vaguer):\n\n1) Logo Lock Rules\n- The Latimore Life & Legacy LLC logo must always include:\n  - Shield icon as the primary container.\n  - The word \"LATIMORE\" with two upward arrows replacing the \"A\".\n  - The words \"LIFE & LEGACY LLC,\" spaced and aligned as approved.\n  - The tagline (for example): \"Life Happens. Legacy is Planned.\"\n  - A continuous heartbeat line integrated into the design.\n  - An upward growth arrow symbolizing long-term planning and stability.\n  - The hashtag (for example): #LatimoreLifeAndLegacy.\n- These elements may not be removed, rearranged, or substituted without explicit brand approval.\n\n2) Locked Color Palette\n- The logo may only use:\n  - Primary Deep Slate: #2C3E50.\n  - Accent Gold: #C49A6C.\n  - White: #FFFFFF.\n- These are the only colors allowed in the logo artwork.\n- Tints and shades are not allowed unless explicitly approved.\n- The logo may not be recolored to match external brand palettes or templates.\n\n3) Ideal Client Pain Point Refinements\n- Young Families:\n  - Focus on juggling immediate expenses with long-term protection and legacy.\n- Pre-Retirees:\n  - Emphasize fear of outliving their money and being forced to rely on their children.\n  - Include anxiety that a single health event could unravel decades of planning.\n- School Districts and Educational Institutions:\n  - Emphasize risk of operational chaos and financial instability if a Superintendent or Business Manager dies suddenly.\n  - Highlight exposure to parent backlash and community mistrust if leadership succession is handled reactively rather than with preparation.\n\n4) Founder Story Reference Protocol\n- The founder's survival story and the Greg Moyer AED legacy must:\n  - Always be handled with dignity and respect.\n  - Focus on preparedness, protection, and the power of legacy.\n  - Never rely on graphic detail or shock factor around cardiac arrest.\n  - Never be used for fear-based, manipulative selling.\n\n5) Market and KPI Orientation\n- The Schuylkill County 12-month market plan is the initial focus.\n- Year 1 benchmark examples:\n  - Monthly Application Volume: 3 to 5 new policies per month by Month 12.\n  - Referral Rate: 20 to 30 percent of new business from referrals.\n  - School District Penetration: 3 to 5 active district contracts in Schuylkill County by Month 12.\n- All asset evaluation should be capable of tying recommendations back to these or similar KPIs.\n\n6) Brand Voice Anchors\n- Tone: urgent but not fear-based, empathetic, practical, legacy-focused.\n- Emphasize preparedness, stewardship, and long-term stability over doom and drama.\n- Speak with clarity and structure, not jargon or complexity.\n\nAction:\n1. Read and internalize {brand_manual_text}.\n2. Merge it with the overlay rules above into a unified internal brand model.\n3. Do not output a summary yet.\n4. Respond only with:\n   READY: Latimore brand context loaded.",
+      "summary": "Ingest the full brand manual and construct an internal mental model of the brand that you will use consistently in later steps.",
+      "engine": "Claude"
+    },
+    {
+      "id": "3",
+      "label": "🧠 Build Guardrail Matrix",
+      "title": "Build Guardrail Matrix",
+      "prompt": "You are now operating with the Latimore Life & Legacy LLC brand context previously loaded.\n\nTask:\nTransform the full brand context into a concise, operational guardrail matrix that later steps can use for fast, consistent brand checks and content generation.\n\nInputs:\n- The internal brand model you created in the previous step.\n\nOutput:\nProduce a structured guardrail matrix in clear markdown with the following sections:\n\n1) Voice and Tone\n- Describe the core tone principles.\n- Provide \"always do\" and \"never do\" lists.\n- Include specific notes about:\n  - Urgent but not fear-based framing.\n  - Emphasis on preparedness and legacy.\n  - Clarity over jargon.\n\n2) Logo and Visual Use\n- Restate logo lock elements as a short checklist.\n- Restate the locked color palette.\n- Include simple pass or fail criteria for:\n  - Structural correctness.\n  - Color correctness.\n  - Misuse in templates or recoloring.\n\n3) Founder Story Protocol\n- Summarize when and how the founder story should be used.\n- Include an explicit list of prohibited treatments:\n  - No graphic cardiac details.\n  - No shock value framing.\n  - No manipulation through fear.\n- Include recommended angles:\n  - Preparedness.\n  - Community protection.\n  - Legacy building.\n\n4) Ideal Client Profiles and Pain Points\n- List each ICP:\n  - Young Families.\n  - Pre-Retirees.\n  - School Districts and Educational Institutions.\n- For each ICP, provide:\n  - Top three emotional pain points using the improved language.\n  - Desired emotional outcome after working with Latimore.\n\n5) Market Plan and KPI Alignment\n- Summarize the main focus geography and broader market context.\n- List the key KPIs:\n  - Monthly application volume.\n  - Referral rate.\n  - School district penetration.\n- Suggest how content and calls to action should support these KPIs.\n\n6) Compliance Check Template\n- Provide a short checklist template with items such as:\n  - On-brand voice and tone.\n  - ICP-specific alignment.\n  - Sensitive-story handling.\n  - Logo and color usage.\n  - KPI-linked call to action alignment.\n\nStyle:\n- Be concise and operational.\n- Imagine this will be used as {latimore_guardrails} by automated systems.\n- Output only the guardrail matrix.",
+      "summary": "Transform the full brand context into a concise, operational guardrail matrix that later steps can use for fast, consistent brand checks and content generation.",
+      "engine": "Claude"
+    },
+    {
+      "id": "4",
+      "label": "📦 Brand Compliance Review",
+      "title": "Brand Compliance Review",
+      "prompt": "You are the Latimore Brand Compliance Reviewer, using the guardrail matrix as your reference.\n\nTask:\nReview a specific draft asset for alignment with the Latimore Life & Legacy LLC brand and produce a clear, actionable compliance report.\n\nInputs:\n- {latimore_guardrails}.\n- {asset_type}.\n- {asset_purpose}.\n- {asset_channel}.\n- {target_icp}.\n- {primary_kpi_focus}.\n- {asset_text}.\n\nSteps:\n1) Context Check\n- Briefly restate:\n  - What the asset is ({asset_type}).\n  - Where it will live ({asset_channel}).\n  - Who it targets ({target_icp}).\n  - What it is trying to achieve ({asset_purpose}).\n  - Which KPI it should support ({primary_kpi_focus}).\n\n2) Guardrail-Based Review\nUsing {latimore_guardrails}, review the asset under these headings:\n\n- Voice and Tone\n  - Does it feel urgent but not fear-based.\n  - Does it emphasize preparedness and legacy over panic and doom.\n  - Is the language clear and accessible.\n\n- ICP Alignment\n  - Does it speak directly to {target_icp} using accurate, emotionally resonant pain points and desired outcomes.\n  - Does it accidentally mix messages meant for other ICPs.\n\n- Founder Story Protocol\n  - If the founder story or Greg Moyer AED legacy is mentioned, is it handled with dignity and respect.\n  - Is there any hint of graphic detail or shock factor.\n\n- Logo and Visual Use\n  - If the text references logo or visual elements (guidelines, instructions, alt text, or layout notes), do they:\n    - Respect shield, arrows, heartbeat line, growth arrow, tagline, and hashtag.\n    - Respect the locked palette of #2C3E50, #C49A6C, and #FFFFFF only.\n\n- KPI Alignment\n  - Given {asset_purpose} and {primary_kpi_focus}, is there a clear path to:\n    - Increase monthly applications.\n    - Boost referrals.\n    - Gain or deepen school district contracts.\n  - Are calls to action specific and realistic.\n\n3) Output Format\nProduce a markdown report with:\n\n- Summary\n  - One short paragraph on whether this asset is broadly on-brand or needs significant revision.\n\n- Compliance Table\n  - A table with columns:\n    - Guardrail Area.\n    - Status (PASS, SOFT WARNING, FAIL).\n    - Evidence (quote or description from {asset_text}).\n    - Recommendation (what to change).\n\n- Priority Fix List\n  - A numbered list of the top five changes that will have the biggest impact on brand alignment and effectiveness.\n\n4) Extract Review Notes\nAt the end, provide a concise bullet list titled \"Notes for Rewrite\" that includes all key issues and improvement directions. These notes will be passed as {notes_from_review} to the next step.\n\nStyle:\n- Be firm but constructive.\n- Focus on specific phrases, sentences, or sections rather than vague critiques.",
+      "summary": "Review a specific draft asset for alignment with the Latimore Life & Legacy LLC brand and produce a clear, actionable compliance report.",
+      "engine": "Claude"
+    },
+    {
+      "id": "5",
+      "label": "✍️ On-Brand Asset Rewrite",
+      "title": "On-Brand Asset Rewrite",
+      "prompt": "You are the Latimore Brand Aligned Copywriter.\n\nTask:\nRewrite or refine the draft asset so that it is fully aligned with the Latimore Life & Legacy LLC brand, based on the guardrails and previous review.\n\nInputs:\n- {latimore_guardrails}.\n- {asset_type}.\n- {asset_purpose}.\n- {asset_channel}.\n- {target_icp}.\n- {primary_kpi_focus}.\n- {asset_text}.\n- {notes_from_review}.\n\nGoals:\n- Preserve the core intent of the original {asset_text}.\n- Apply all necessary changes indicated in {notes_from_review}.\n- Fully comply with {latimore_guardrails}.\n- Strengthen impact on {primary_kpi_focus} where appropriate.\n\nSteps:\n1) Internalize Notes\n- Read {notes_from_review} as a non-negotiable change list and merge them with your understanding of {latimore_guardrails}.\n\n2) Rewrite\n- Produce a fully revised version of {asset_text} that:\n  - Uses an urgent but not fear-based tone.\n  - Speaks directly and empathetically to {target_icp} using appropriate pain points and outcomes.\n  - References the founder story and Greg Moyer AED legacy only if needed, and always in line with the Founder Story Protocol.\n  - Avoids graphic or shock-based phrasing.\n  - Includes calls to action or directional language that support {primary_kpi_focus} when appropriate to {asset_purpose} and {asset_channel}.\n\n3) Output Format\n- First, present a heading \"On-Brand Version\" followed by the revised asset.\n- Then, provide a short \"Change Rationale\" section with bullet points explaining the key adjustments made in terms of:\n  - Tone.\n  - ICP alignment.\n  - Founder story handling (if applicable).\n  - KPI-connected calls to action.\n\nStyle:\n- Match the natural length and format expected of {asset_type} in {asset_channel}.\n- Keep the copy readable, concrete, and free of jargon.",
+      "summary": "Rewrite or refine the draft asset so that it is fully aligned with the Latimore Life & Legacy LLC brand, based on the guardrails and previous review.",
+      "engine": "Claude"
+    },
+    {
+      "id": "6",
+      "label": "📊 KPI-Aligned CTA Generator",
+      "title": "KPI-Aligned CTA Generator",
+      "prompt": "You are a KPI-focused messaging specialist for Latimore Life & Legacy LLC.\n\nTask:\nGenerate or refine calls to action and closing lines for a given asset so they are tightly aligned with Latimore's business goals and KPIs.\n\nInputs:\n- {asset_type}.\n- {asset_purpose}.\n- {asset_channel}.\n- {target_icp}.\n- {primary_kpi_focus}.\n\nSteps:\n1) Interpret the KPI Focus\n- Map {primary_kpi_focus} to one of the core metrics:\n  - Monthly application volume.\n  - Referral rate.\n  - School district penetration.\n  - Or a clearly related metric you can name.\n\n2) Propose Calls to Action\n- Generate 3 to 7 call to action options tailored to:\n  - {target_icp}.\n  - {asset_channel}.\n  - {asset_purpose}.\n- Ensure calls to action are:\n  - Actionable and specific.\n  - Consistent with the urgent but not fear-based tone.\n  - Appropriate for the commitment level and context of {asset_type}.\n\n3) Output Format\n- Start with one or two sentences explaining which KPI the calls to action are designed to move.\n- Then list the calls to action in a markdown bullet list, ready to plug into the final asset.",
+      "summary": "Generate or refine calls to action and closing lines for a given asset so they are tightly aligned with Latimore's business goals and KPIs.",
+      "engine": "Claude"
+    },
+    {
+      "id": "7",
+      "label": "🧱 Latimore Content Builder",
+      "title": "Latimore Content Builder",
+      "prompt": "You are the Latimore Brand Content Builder.\n\nTask:\nCreate a new, original piece of content from scratch that is fully on-brand for Latimore Life & Legacy LLC and directly supports a business goal.\n\nInputs:\n- {latimore_guardrails}.\n- {asset_type}.\n- {asset_purpose}.\n- {asset_channel}.\n- {target_icp}.\n- {primary_kpi_focus}.\n- {content_brief}.\n- {content_format}.\n- {content_length}.\n- {distribution_notes}.\n\nSteps:\n1) Interpret the Brief\n- Summarize in a few sentences:\n  - What you are creating ({asset_type}, {content_format}).\n  - Who it is for ({target_icp}).\n  - What action or shift it should create ({asset_purpose}, {primary_kpi_focus}).\n  - Where and how it will be used ({asset_channel}, {distribution_notes}).\n\n2) Build the Content\n- Using {latimore_guardrails}, create the full asset:\n  - Follow the voice and tone rules.\n  - Use the relevant pain points and desired outcomes for {target_icp}.\n  - Respect the Founder Story Protocol if you mention the founder or Greg Moyer AED legacy.\n  - Naturally point toward the desired KPI outcome for {primary_kpi_focus}.\n- Respect {content_length} by roughly matching the requested depth and size.\n\n3) Provide Repurposing Hooks\n- After the main content, add a section titled \"Repurposing Hooks\".\n- Provide 3 to 5 short ideas for how this same content could be:\n  - Shortened or adapted for another channel.\n  - Turned into talking points, slides, or social posts.\n\nOutput:\n- A heading \"Primary Asset\" followed by the full content.\n- A heading \"Repurposing Hooks\" followed by the repurposing ideas.",
+      "summary": "Create a new, original piece of content from scratch that is fully on-brand for Latimore Life & Legacy LLC and directly supports a business goal.",
+      "engine": "Claude"
+    },
+    {
+      "id": "8",
+      "label": "🧭 Brand Drift Detector",
+      "title": "Brand Drift Detector",
+      "prompt": "You are the Latimore Brand Drift Detector.\n\nTask:\nCompare a new asset to a set of historical Latimore assets and determine whether the brand voice, positioning, and guardrails are drifting.\n\nInputs:\n- {latimore_guardrails}.\n- {historical_assets}.\n- {new_asset_text}.\n\nSteps:\n1) Derive Historical Pattern\n- From {historical_assets}, extract:\n  - Common tone and phrasing patterns.\n  - Typical emotional arc and messaging emphasis.\n  - Usual treatment of pain points and outcomes for each ICP.\n  - Any recurring ways the founder story and legacy concepts are handled.\n\n2) Compare the New Asset\n- Using {latimore_guardrails} and the historical pattern, evaluate {new_asset_text} on:\n  - Voice and tone.\n  - ICP focus and pain point accuracy.\n  - Founder story handling (if present).\n  - Overall emotional temperature (too flat, too dramatic, or consistent).\n  - Strategic focus relative to Latimore KPIs.\n\n3) Output Format\nProduce:\n\n- Drift Scorecard\n  - A small table with columns:\n    - Dimension (tone, ICP alignment, founder story, KPI focus).\n    - Status (Aligned, Slight Drift, Major Drift).\n    - Notes.\n\n- Narrative Assessment\n  - One to three paragraphs explaining where the new asset is consistent and where it is drifting.\n\n- Correction Guidelines\n  - A bullet list of concrete ways to bring the new asset back into alignment.\n\nStyle:\n- Be diagnostic, not harsh.\n- Assume the goal is to maintain and refine a strong brand, not to punish experimentation.",
+      "summary": "Compare a new asset to a set of historical Latimore assets and determine whether the brand voice, positioning, and guardrails are drifting.",
+      "engine": "Claude + Codex"
+    },
+    {
+      "id": "9",
+      "label": "🎨 Designer Brief Generator",
+      "title": "Designer Brief Generator",
+      "prompt": "You are the Visual Designer Brief Generator for Latimore Life & Legacy LLC.\n\nTask:\nTurn the Latimore guardrails and a specific asset request into a one-page creative brief for designers, with a clear focus on logo lock, color usage, and brand feel.\n\nInputs:\n- {latimore_guardrails}.\n- {asset_type}.\n- {asset_channel}.\n- {target_icp}.\n- {asset_purpose}.\n- {visual_requirements}.\n\nSteps:\n1) Context Summary\n- Briefly describe:\n  - What is being designed ({asset_type}).\n  - Where it will appear ({asset_channel}).\n  - Who it is for ({target_icp}).\n  - What outcome it must support ({asset_purpose}).\n\n2) Brand and Visual Guardrails\n- Extract from {latimore_guardrails} and present:\n  - Logo lock requirements as a checklist.\n  - Official color palette and usage rules.\n  - Any constraints on imagery, icons, or symbolism.\n\n3) Content and Message Highlights\n- Describe what the visual should communicate emotionally and practically, aligned to:\n  - ICP pain points and desired outcomes.\n  - Preparedness and legacy themes.\n  - The tone of urgent but not fear-based.\n\n4) Practical Specifications\n- Incorporate {visual_requirements} plus any obvious needs based on {asset_channel}, such as:\n  - Orientation, print versus digital.\n  - Space for copy, QR codes, or logos.\n  - File format or size considerations if given.\n\nOutput:\n- A clear, sectioned creative brief in markdown, with headings:\n  - Overview.\n  - Brand and Visual Guardrails.\n  - Message and Emotion.\n  - Practical Specifications.",
+      "summary": "Turn the Latimore guardrails and a specific asset request into a one-page creative brief for designers, with a clear focus on logo lock, color usage, and brand feel.",
+      "engine": "Claude"
+    },
+    {
+      "id": "10",
+      "label": "🏫 School District Proposal Builder",
+      "title": "School District Proposal Builder",
+      "prompt": "You are the School District Proposal Builder for Latimore Life & Legacy LLC.\n\nTask:\nAssemble an on-brand proposal draft aimed at school districts, using the Latimore guardrails and a provided district profile and component list.\n\nInputs:\n- {latimore_guardrails}.\n- {district_profile}.\n- {proposal_components}.\n\nAssumptions:\n- The offer focuses on protecting districts from operational chaos and financial instability in the event of leadership loss, while reinforcing community trust and preparedness.\n\nSteps:\n1) Understand the District\n- From {district_profile}, note:\n  - Size and location.\n  - Key stakeholders and decision-makers.\n  - Known concerns or recent events.\n  - Any relevant political or community dynamics.\n\n2) Map Components\n- Interpret {proposal_components} as the required structure, which may include items such as:\n  - Executive Summary.\n  - Current Risk Landscape.\n  - Latimore Solution Overview.\n  - Implementation Plan.\n  - Pricing and Options.\n  - Support, Training, and Communication.\n  - Next Steps and Call to Action.\n\n3) Build the Proposal\n- For each component in {proposal_components}, write content that:\n  - Uses the urgent but not fear-based tone.\n  - Emphasizes risks like operational chaos and financial instability without dramatizing.\n  - Highlights benefits around preparedness, continuity, and community trust.\n  - Respects the Founder Story Protocol if the story is used.\n  - Naturally points toward school district penetration as a KPI.\n\n4) Output Format\n- Present the proposal as a structured document with clear section headings that match {proposal_components}.\n- Include a short \"Board Ready Summary\" at the top that could be used as a one-page cover or executive overview.\n\nStyle:\n- Professional and reassuring.\n- Focused on partnership, stewardship, and long-term stability for the district.",
+      "summary": "Assemble an on-brand proposal draft aimed at school districts, using the Latimore guardrails and a provided district profile and component list.",
+      "engine": "Claude"
+    },
+    {
+      "id": "C1",
+      "label": "🧱 Latimore Hub OS Build & Deploy",
+      "title": "Latimore Hub OS Build & Deploy",
+      "engine": "Codex",
+      "summary": "Maintain the Next.js/Prisma/Supabase/Vercel codebase: admin portal, CRM AI route, GA4 tracking, county landing pages, and lead funnel.",
+      "prompt": "Build the Codex workflow file (codex.md or AGENTS.md) for the Latimore Hub OS. Include auto file organization rules, brand drift check on PR, and school district proposal export automation."
+    },
+    {
+      "id": "C2",
+      "label": "🗂️ Auto File Organization",
+      "title": "Auto File Organization",
+      "engine": "Codex",
+      "summary": "Scan /outputs, /legal, /marketing, /proposals, /clients, and /hub-os on every commit. Rename by convention, move to correct folder, and log changes.",
+      "prompt": "Write a Codex file organizer script for Latimore Hub OS that auto-renames and moves files in /marketing, /proposals, /clients, /legal, and /hub-os using a consistent naming convention. Output as a Node.js script."
+    },
+    {
+      "id": "C3",
+      "label": "🧪 Brand Drift PR Check",
+      "title": "Brand Drift PR Check",
+      "engine": "Codex",
+      "summary": "Trigger Claude brand drift checks on PR merge and post the drift scorecard as a GitHub comment.",
+      "prompt": "Write a GitHub Actions YAML workflow that runs a brand drift check using Claude API on every PR to main in the Latimore Hub OS repo."
+    },
+    {
+      "id": "C4",
+      "label": "📤 Proposal PDF/DOCX Export",
+      "title": "Proposal PDF/DOCX Export",
+      "engine": "Codex",
+      "summary": "Render Claude proposal JSON into branded PDF/DOCX, store it under /proposals/districts/, and prepare the client email.",
+      "prompt": "Write a Node.js Codex script that converts a Latimore school district proposal JSON into a branded PDF and emails it using Resend API."
+    }
+  ],
+  "templates": [
+    {
+      "id": "tpl-1",
+      "title": "Mortgage Protection Explained",
+      "category": "Educational",
+      "platform": "Facebook",
+      "audienceTrack": "New Homeowners",
+      "body": "Purchasing a home is the biggest investment most families make. But what happens to the mortgage if the primary earner passes away unexpectedly? Mortgage protection insurance is designed to pay off your remaining debt directly, ensuring your family keeps their home.",
+      "cta": "Request a custom quote breakdown today.",
+      "hashtags": [
+        "HomeownerTips",
+        "MortgageProtection",
+        "LatimoreHub"
+      ],
+      "suggestedDay": "Tuesday",
+      "suggestedTime": "10:00 AM",
+      "campaign": "Safe Haven 2026",
+      "complianceStatus": "approved"
+    },
+    {
+      "id": "tpl-2",
+      "title": "Life Insurance Audit Checklist",
+      "category": "Tips & Quick Facts",
+      "platform": "LinkedIn",
+      "audienceTrack": "Corporate Professionals",
+      "body": "When was the last time you reviewed your life insurance coverage? Major milestones—marriage, career advancements, new school years—all change your liability map. Use our 5-minute audit checklist to ensure your coverage aligns with your current income replacement needs.",
+      "cta": "Download the 5-Minute Audit PDF.",
+      "hashtags": [
+        "WealthManagement",
+        "FinancialHealth",
+        "ExecutivePlanning"
+      ],
+      "suggestedDay": "Wednesday",
+      "suggestedTime": "08:30 AM",
+      "campaign": "Legacy Guard",
+      "complianceStatus": "approved"
+    },
+    {
+      "id": "tpl-3",
+      "title": "High School Sports Safety",
+      "category": "Engagement & Community",
+      "platform": "Instagram",
+      "audienceTrack": "Families & Parents",
+      "body": "With high school football season kicking off, keeping student-athletes protected extends beyond the helmet. Ensure your school's athletic boosters are auditing their AED access plans and emergency coverage policies. Protect the kids who give it their all!",
+      "cta": "Join our local community safety discussion in the replies.",
+      "hashtags": [
+        "HighSchoolFootball",
+        "YouthAthletics",
+        "CommunitySafety"
+      ],
+      "suggestedDay": "Thursday",
+      "suggestedTime": "04:00 PM",
+      "campaign": "PAHS Athletics 2026",
+      "complianceStatus": "approved"
+    },
+    {
+      "id": "tpl-4",
+      "title": "End-of-Year Policy Checkup",
+      "category": "Seasonal",
+      "platform": "LinkedIn",
+      "audienceTrack": "Business Owners",
+      "body": "The final financial quarter is approaching fast. For corporate leaders and small business owners, structuring key-person life insurance or evaluating buy-sell agreement funding is crucial for tax optimization and business continuity.",
+      "cta": "Book a 15-minute consultation with our corporate risk analysts.",
+      "hashtags": [
+        "BusinessContinuity",
+        "TaxPlanning",
+        "RiskManagement"
+      ],
+      "suggestedDay": "Monday",
+      "suggestedTime": "09:00 AM",
+      "campaign": "Q4 Preparation",
+      "complianceStatus": "draft"
+    }
+  ],
+  "baselineMetrics": {
+    "facebook": {
+      "impressions": 12000,
+      "reach": 9800,
+      "clicks": 450,
+      "reactions": 320,
+      "comments": 45,
+      "shares": 12,
+      "leads": 8
+    },
+    "instagram": {
+      "impressions": 18500,
+      "reach": 14200,
+      "clicks": 680,
+      "reactions": 1100,
+      "comments": 92,
+      "shares": 45,
+      "leads": 14
+    },
+    "linkedin": {
+      "impressions": 7200,
+      "reach": 5100,
+      "clicks": 310,
+      "reactions": 180,
+      "comments": 28,
+      "shares": 19,
+      "leads": 11
+    },
+    "website": {
+      "impressions": 34000,
+      "reach": 22000,
+      "clicks": 4200,
+      "reactions": 0,
+      "comments": 14,
+      "shares": 0,
+      "leads": 95
+    }
+  },
+  "currentMetrics": {
+    "facebook": {
+      "impressions": 14100,
+      "reach": 11200,
+      "clicks": 580,
+      "reactions": 410,
+      "comments": 55,
+      "shares": 18,
+      "leads": 12
+    },
+    "instagram": {
+      "impressions": 26400,
+      "reach": 19800,
+      "clicks": 920,
+      "reactions": 1650,
+      "comments": 115,
+      "shares": 62,
+      "leads": 19
+    },
+    "linkedin": {
+      "impressions": 15800,
+      "reach": 11400,
+      "clicks": 820,
+      "reactions": 410,
+      "comments": 84,
+      "shares": 42,
+      "leads": 26
+    },
+    "website": {
+      "impressions": 41200,
+      "reach": 29000,
+      "clicks": 5400,
+      "reactions": 0,
+      "comments": 19,
+      "shares": 0,
+      "leads": 122
+    }
+  },
+  "comments": [
+    {
+      "id": "comm-1",
+      "author": "@david_reynolds",
+      "body": "This mortgage protection plan sounds like exactly what we need for our new home in the school district, but does the rate lock in forever?",
+      "platform": "Facebook",
+      "postTitle": "Mortgage Protection Explained",
+      "createdAt": "2026-05-22T08:15:00Z",
+      "analysis": null
+    },
+    {
+      "id": "comm-2",
+      "author": "Elena_V",
+      "body": "I hate how hard it is to actually get a claim paid out. Insurance companies just take your money and run. Scams all around.",
+      "platform": "Instagram",
+      "postTitle": "High School Sports Safety",
+      "createdAt": "2026-05-22T07:30:00Z",
+      "analysis": {
+        "sentiment": "negative",
+        "confidence": 0.96,
+        "intent": "complaint",
+        "urgency": "medium",
+        "topics": [
+          "claims processing",
+          "trust"
+        ],
+        "trending_terms": [
+          "scam",
+          "payout"
+        ],
+        "lead_potential": "low",
+        "compliance_risk": "medium",
+        "recommended_action": "Acknowledge frustration, highlight Latimore claim support process, invite to personal discussion."
+      }
+    },
+    {
+      "id": "comm-3",
+      "author": "Marcus Vance",
+      "body": "Our firm has 4 key partners. What setup would you recommend for corporate succession planning under current state law?",
+      "platform": "LinkedIn",
+      "postTitle": "End-of-Year Policy Checkup",
+      "createdAt": "2026-05-21T16:45:00Z",
+      "analysis": {
+        "sentiment": "neutral",
+        "confidence": 0.98,
+        "intent": "purchase_interest",
+        "urgency": "high",
+        "topics": [
+          "succession planning",
+          "corporate planning"
+        ],
+        "trending_terms": [
+          "key partners",
+          "state law"
+        ],
+        "lead_potential": "high",
+        "compliance_risk": "none",
+        "recommended_action": "Immediate sales follow-up. Share Calendly link for Corporate Partner Risk Evaluation session."
+      }
+    }
+  ],
+  "documents": [
+    {
+      "id": "doc-1",
+      "name": "PAHS_District_Safety_Report.pdf",
+      "size": "2.4 MB",
+      "uploadedAt": "2026-05-20",
+      "mockContent": "PAHS School Athletic Booster guidelines: Mandates absolute AED accessibility within 60 seconds of any heat exhaustion or impact event. Recommends general liability limits of $2,000,000 for local booster events."
+    },
+    {
+      "id": "doc-2",
+      "name": "Q3_Term_Life_Rates.xlsx",
+      "size": "1.1 MB",
+      "uploadedAt": "2026-05-18",
+      "mockContent": "Latimore Hub Q3 Pricing Grid. Preferred non-tobacco tier term-life pricing starts at $15.50/mo for $250k protection. Standard rate structures adjust by state-level demographic indices."
+    }
+  ],
+  "scheduledPosts": [
+    {
+      "id": "sp-1",
+      "title": "Seeded Tip Post",
+      "platform": "LinkedIn",
+      "caption": "Unlocking corporate risk evaluation parameters for family-owned entities.",
+      "status": "scheduled",
+      "scheduledAt": "2026-05-25T10:00:00Z",
+      "campaign": "Legacy Guard"
+    }
+  ],
+  "folders": [
+    {
+      "root": "/marketing",
+      "items": [
+        {
+          "name": "brand-guardrails.md",
+          "status": "auto"
+        },
+        {
+          "name": "email-sequences/",
+          "status": "auto"
+        },
+        {
+          "name": "social-posts/",
+          "status": "auto"
+        },
+        {
+          "name": "landing-pages/",
+          "status": "auto"
+        },
+        {
+          "name": "pahs-full-circle-campaign/",
+          "status": "manual"
+        }
+      ]
+    },
+    {
+      "root": "/proposals",
+      "items": [
+        {
+          "name": "districts/shenandoah-valley.pdf",
+          "status": "auto"
+        },
+        {
+          "name": "districts/schuylkill-haven.pdf",
+          "status": "auto"
+        },
+        {
+          "name": "chamber/allstar-sponsorship.pdf",
+          "status": "manual"
+        }
+      ]
+    },
+    {
+      "root": "/clients",
+      "items": [
+        {
+          "name": "crm-export.csv",
+          "status": "auto"
+        },
+        {
+          "name": "policy-tracker.xlsx",
+          "status": "auto"
+        },
+        {
+          "name": "referral-log.md",
+          "status": "auto"
+        }
+      ]
+    },
+    {
+      "root": "/legal",
+      "items": [
+        {
+          "name": "LAT-2026-01-complaint.pdf",
+          "status": "legal"
+        },
+        {
+          "name": "exhibits/",
+          "status": "legal"
+        },
+        {
+          "name": "diocese-acknowledgment.pdf",
+          "status": "legal"
+        },
+        {
+          "name": "appclose-exports/",
+          "status": "legal"
+        }
+      ]
+    },
+    {
+      "root": "/hub-os",
+      "items": [
+        {
+          "name": "next.config.js",
+          "status": "auto"
+        },
+        {
+          "name": "prisma/schema.prisma",
+          "status": "auto"
+        },
+        {
+          "name": "codex.md",
+          "status": "auto"
+        },
+        {
+          "name": ".env.local",
+          "status": "manual"
+        }
+      ]
+    }
+  ],
+  "codexPrompts": [
+    {
+      "title": "Auto-organize output files",
+      "tag": "File OS",
+      "body": "Scan /outputs and all subdirectories. Rename files using the convention: YYYY-MM-DD_[type]_[audience]_[channel].ext. Move files into /marketing, /proposals, /clients, /legal, or /hub-os. Log every move."
+    },
+    {
+      "title": "Brand drift check on PR",
+      "tag": "Brand OS",
+      "body": "On every PR to main, extract all new markdown/html content files. Send each to Claude with the brand guardrails and drift detector prompt. Return PASS, SOFT WARNING, or FAIL as a GitHub PR comment."
+    },
+    {
+      "title": "Proposal PDF export",
+      "tag": "Revenue",
+      "body": "Take the school district proposal JSON from Claude's output. Render it as a print-ready PDF using Latimore brand colors, store it to /proposals/districts/, and prepare an email draft."
+    },
+    {
+      "title": "Weekly KPI report",
+      "tag": "Revenue",
+      "body": "Every Monday 7am, query Supabase for new policies, referrals, and leads from the past 7 days. Send a concise KPI email to Jackson with next actions."
+    },
+    {
+      "title": "GA4 lead event tracker",
+      "tag": "Revenue",
+      "body": "On every lead form submission, fire a GA4 custom event: generate_lead with params: source, county, icp_type, carrier. Log to Supabase leads table."
+    }
+  ],
+  "ops": [
+    {
+      "task": "Review weekly KPI email and update policy tracker",
+      "meta": "Every Monday · Codex auto-sends, Jackson reviews"
+    },
+    {
+      "task": "Run brand compliance review on any new content before posting",
+      "meta": "Before publish · Claude stage 3"
+    },
+    {
+      "task": "Push Hub OS code via Termux — Codex auto-organizes on commit",
+      "meta": "Every commit · Codex file organizer"
+    },
+    {
+      "task": "Follow up on 2 prospects from CRM — document outcome in referral log",
+      "meta": "Daily · Manual · Target referral rate 20–30%"
+    },
+    {
+      "task": "Send or schedule one county-specific social post",
+      "meta": "Daily · Schuylkill / Luzerne / Northumberland"
+    },
+    {
+      "task": "Check PAHS CampusBox balance — $460 due today (05/18/2026)",
+      "meta": "One-time · Pay balance or confirm arrangement"
+    },
+    {
+      "task": "Review legal case LAT-2026-01 docs — verify all exhibits filed to /legal/",
+      "meta": "Weekly · Legal folder auto-organized by Codex"
+    },
+    {
+      "task": "Identify one school district decision-maker for outreach this week",
+      "meta": "Weekly · Drives district penetration KPI"
+    }
+  ]
+};
+
+const cloneData = (value) => JSON.parse(JSON.stringify(value));
+
+const state = {
+  theme: localStorage.getItem("latimore-theme") || "dark",
+  activeView: "overview",
+  workflowDone: new Set(),
+  templates: cloneData(INITIAL_DATA.templates),
+  comments: cloneData(INITIAL_DATA.comments),
+  documents: cloneData(INITIAL_DATA.documents),
+  scheduledPosts: cloneData(INITIAL_DATA.scheduledPosts),
+  generatedDraft: "",
+  compliance: null,
+  hooks: [],
+  weeklyReport: "",
+  modalPayload: null
+};
+
+const $ = (selector, root = document) => root.querySelector(selector);
+const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
+const fmt = (num) => Number(num).toLocaleString();
+const currency = (num) => new Intl.NumberFormat("en-US", { style:"currency", currency:"USD", maximumFractionDigits:0 }).format(num);
+const nowStamp = () => new Date().toLocaleString();
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function getTotals(metrics) {
+  return Object.values(metrics).reduce((acc, row) => {
+    acc.impressions += row.impressions;
+    acc.reach += row.reach;
+    acc.clicks += row.clicks;
+    acc.engagement += row.reactions + row.comments + row.shares;
+    acc.leads += row.leads;
+    return acc;
+  }, { impressions:0, reach:0, clicks:0, engagement:0, leads:0 });
+}
+
+function pct(current, baseline) {
+  if (!baseline) return "+100%";
+  const value = ((current - baseline) / baseline) * 100;
+  return `${value >= 0 ? "+" : ""}${value.toFixed(1)}%`;
+}
+
+function toast(message) {
+  const el = $("#toast");
+  el.textContent = message;
+  el.classList.add("show");
+  clearTimeout(toast.timer);
+  toast.timer = setTimeout(() => el.classList.remove("show"), 3200);
+}
+
+function setTheme(theme) {
+  state.theme = theme;
+  document.documentElement.dataset.theme = theme;
+  document.body.dataset.theme = theme;
+  localStorage.setItem("latimore-theme", theme);
+  $("#theme-btn").textContent = theme === "dark" ? "☀️" : "🌙";
+}
+
+function switchView(view) {
+  state.activeView = view;
+  $$(".view").forEach(section => section.classList.toggle("active", section.id === `view-${view}`));
+  $$(".nav-btn").forEach(btn => btn.classList.toggle("active", btn.dataset.view === view));
+  window.scrollTo({ top:0, behavior:"smooth" });
+}
+
+function updateBadges() {
+  const unreviewed = state.comments.filter(c => !c.analysis).length;
+  $("#comment-count").textContent = unreviewed;
+  $("#comment-count").classList.toggle("hidden", unreviewed === 0);
+}
+
+function renderSources() {
+  $("#source-files").innerHTML = INITIAL_DATA.sourceFiles.map(name => `
+    <div class="file-row" style="border-top:0;padding-top:0;margin-top:0">
+      <span>${escapeHtml(name)}</span>
+      <span class="badge green">merged</span>
+    </div>
+  `).join("");
+}
+
+function renderOverview() {
+  const baseline = getTotals(INITIAL_DATA.baselineMetrics);
+  const current = getTotals(INITIAL_DATA.currentMetrics);
+  const maxReach = Math.max(...Object.values(INITIAL_DATA.currentMetrics).map(row => row.reach));
+  const insights = Object.entries(INITIAL_DATA.currentMetrics).flatMap(([platform, row]) => {
+    const base = INITIAL_DATA.baselineMetrics[platform];
+    return row.impressions >= base.impressions * 2 ? [{
+      title:`Engagement spike on ${platform.toUpperCase()}`,
+      summary:`Impressions reached ${fmt(row.impressions)} against a ${fmt(base.impressions)} baseline.`,
+      action:"Analyze comment intent and move this topic into the weekly content plan."
+    }] : [];
+  });
+
+  $("#view-overview").innerHTML = `
+    <div class="hero">
+      <div class="hero-row">
+        <div>
+          <h2>Latimore Life & Legacy LLC — Unified Revenue Workflow OS</h2>
+          <p>One runnable command center combining Hub Agent v2, Revenue/File OS, Marketing Intelligence, and the uploaded workflow skill.</p>
+        </div>
+        <div class="row">
+          <span class="mini-pill">GA4: G-S0Q3E4DEBJ</span>
+          <span class="mini-pill">#TheBeatGoesOn</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid kpis">
+      ${kpiCard("Impressions", fmt(current.impressions), `${pct(current.impressions, baseline.impressions)} vs baseline`, "👁️")}
+      ${kpiCard("Engagement", fmt(current.engagement), `${pct(current.engagement, baseline.engagement)} vs baseline`, "💬")}
+      ${kpiCard("CTR / Clicks", fmt(current.clicks), `${pct(current.clicks, baseline.clicks)} vs baseline`, "🖱️")}
+      ${kpiCard("Attributed Leads", fmt(current.leads), `${pct(current.leads, baseline.leads)} vs baseline`, "👥")}
+    </div>
+
+    <div class="grid two" style="margin-top:1rem">
+      <div class="card">
+        <div class="section-title">
+          <h3>Cross-Platform Funnel Optimization</h3>
+          <span class="badge green">Live model</span>
+        </div>
+        <div class="stack">
+          ${Object.entries(INITIAL_DATA.currentMetrics).map(([platform, row]) => {
+            const base = INITIAL_DATA.baselineMetrics[platform];
+            const baseWidth = Math.min(100, (base.reach / maxReach) * 100);
+            const gainWidth = Math.max(4, Math.min(100, ((row.reach - base.reach) / maxReach) * 100));
+            const conversion = row.clicks ? ((row.leads / row.clicks) * 100).toFixed(1) : "0.0";
+            return `
+              <div class="metric-row">
+                <div class="metric-head">
+                  <span>${platform[0].toUpperCase() + platform.slice(1)} Analytics</span>
+                  <span class="muted">Conversion ${conversion}%</span>
+                </div>
+                <div class="bar" title="Baseline reach + current gain">
+                  <span class="base" style="width:${baseWidth}%"></span>
+                  <span class="gain" style="width:${gainWidth}%"></span>
+                </div>
+                <p class="small">Baseline reach ${fmt(base.reach)} → Current reach ${fmt(row.reach)} · Leads ${base.leads} → ${row.leads}</p>
+              </div>
+            `;
+          }).join("")}
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">
+          <h3>Revenue by Channel</h3>
+          <span class="badge amber">May 2026</span>
+        </div>
+        <div class="grid two">
+          ${kpiCard("Life Policies", "$3,900", "Monthly policy base", "🛡️")}
+          ${kpiCard("Annuities", "$1,200", "Nurture track", "📈")}
+          ${kpiCard("School Districts", "$0", "Pipeline open", "🏫")}
+          ${kpiCard("Referral Bonus", "$600", "Referral lift target", "🤝")}
+        </div>
+        <div class="row" style="margin-top:1rem">
+          <button class="primary-btn" onclick="sendAgentObjective('Run full Latimore Revenue & Brand OS workflow for pre-retirees in Schuylkill County.')">Run Full Workflow</button>
+          <button class="ghost-btn" onclick="sendAgentObjective('Generate a school district proposal using the Latimore brand guardrails and proposal builder workflow.')">School District Proposal</button>
+          <button class="ghost-btn" onclick="switchView('reports')">Weekly KPI Review</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid two" style="margin-top:1rem">
+      <div class="card">
+        <div class="section-title"><h3>Intelligence Alerts</h3></div>
+        <div class="stack">
+          ${(insights.length ? insights : [{
+            title:"No critical spike",
+            summary:"Metrics are within modeled range.",
+            action:"Continue scheduled workflow cadence."
+          }]).map(alert => `
+            <div class="alert">
+              <strong>${escapeHtml(alert.title)}</strong>
+              <p class="muted">${escapeHtml(alert.summary)}</p>
+              <p class="small"><strong>Next:</strong> ${escapeHtml(alert.action)}</p>
+            </div>
+          `).join("")}
+          <div class="alert">
+            <strong>Content opportunity: High School Sports</strong>
+            <p class="muted">Safety and AED-related posts are showing localized parent interest.</p>
+            <p class="small"><strong>Next:</strong> Draft PAHS Athletics 2026 educational post and schedule for Thursday 4:00 PM.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-title"><h3>Daily Operations Checklist</h3><span class="badge">click to complete</span></div>
+        <div class="stack">
+          ${INITIAL_DATA.ops.map((item, index) => `
+            <label class="workflow-card row" style="align-items:flex-start;text-transform:none;letter-spacing:0;margin:0">
+              <input type="checkbox" data-op="${index}" style="width:auto;margin-top:.3rem">
+              <span>
+                <strong>${escapeHtml(item.task)}</strong><br>
+                <span class="small">${escapeHtml(item.meta)}</span>
+              </span>
+            </label>
+          `).join("")}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function kpiCard(label, value, delta, icon) {
+  return `
+    <div class="card kpi">
+      <div class="label"><span>${escapeHtml(label)}</span><span>${icon}</span></div>
+      <div>
+        <div class="value">${escapeHtml(value)}</div>
+        <div class="delta">${escapeHtml(delta)}</div>
+      </div>
+    </div>
+  `;
+}
+
+function renderWorkflow() {
+  const claude = INITIAL_DATA.workflowNodes.filter(n => n.engine.includes("Claude"));
+  const codex = INITIAL_DATA.workflowNodes.filter(n => !n.engine.includes("Claude"));
+  $("#view-workflow").innerHTML = `
+    <div class="hero">
+      <div class="hero-row">
+        <div>
+          <h2>${escapeHtml(INITIAL_DATA.workflowMeta.name)}</h2>
+          <p>${escapeHtml(INITIAL_DATA.workflowMeta.description)}</p>
+        </div>
+        <button class="primary-btn" onclick="runWorkflow()">Run All Stages</button>
+      </div>
+    </div>
+
+    <div class="grid two">
+      <div class="card">
+        <div class="section-title"><h3>Claude-led Stages</h3><span class="badge">${claude.length} nodes</span></div>
+        <div class="stack">${claude.map(workflowCard).join("")}</div>
+      </div>
+      <div class="card">
+        <div class="section-title"><h3>Codex / Export Stages</h3><span class="badge">${codex.length} nodes</span></div>
+        <div class="stack">${codex.map(workflowCard).join("")}</div>
+      </div>
+    </div>
+  `;
+}
+
+function workflowCard(node) {
+  const done = state.workflowDone.has(String(node.id));
+  return `
+    <div class="workflow-card ${done ? "done" : ""}">
+      <div class="card-title">
+        <div>
+          <h3>${escapeHtml(node.label)}</h3>
+          <p>${escapeHtml(node.summary)}</p>
+        </div>
+        <span class="badge ${done ? "green" : ""}">${done ? "done" : escapeHtml(node.engine)}</span>
+      </div>
+      <div class="row">
+        <button class="ghost-btn" onclick="openPrompt('${node.id}')">View Prompt</button>
+        <button class="primary-btn" onclick="runStage('${node.id}')">Run Stage</button>
+      </div>
+    </div>
+  `;
+}
+
+function renderTemplates() {
+  $("#view-templates").innerHTML = `
+    <div class="hero">
+      <div class="hero-row">
+        <div>
+          <h2>Corporate Template Seed Bank</h2>
+          <p>Approved campaign frameworks from the marketing intelligence dashboard.</p>
+        </div>
+        <button class="ghost-btn" onclick="switchView('creator')">Open Creator</button>
+      </div>
+    </div>
+    <div class="grid two">
+      ${state.templates.map(tpl => `
+        <article class="template-card">
+          <div class="card-title">
+            <div>
+              <span class="badge">${escapeHtml(tpl.category)}</span>
+              <h3 style="margin:.65rem 0 .25rem">${escapeHtml(tpl.title)}</h3>
+              <p>${escapeHtml(tpl.body)}</p>
+            </div>
+            <span class="badge ${tpl.complianceStatus === "approved" ? "green" : "amber"}">${escapeHtml(tpl.complianceStatus)}</span>
+          </div>
+          <div class="small">
+            <strong>Platform:</strong> ${escapeHtml(tpl.platform)} · 
+            <strong>Audience:</strong> ${escapeHtml(tpl.audienceTrack)} ·
+            <strong>Schedule:</strong> ${escapeHtml(tpl.suggestedDay)} ${escapeHtml(tpl.suggestedTime)}
+          </div>
+          <p class="small"><strong>CTA:</strong> ${escapeHtml(tpl.cta)}</p>
+          <div class="row">
+            ${tpl.hashtags.map(tag => `<span class="tag">#${escapeHtml(tag)}</span>`).join("")}
+          </div>
+          <div class="row" style="margin-top:1rem">
+            <button class="primary-btn" onclick="cloneTemplate('${tpl.id}')">Generate from Template</button>
+            <button class="ghost-btn" onclick="scheduleTemplate('${tpl.id}')">Quick Schedule</button>
+          </div>
+        </article>
+      `).join("")}
+    </div>
+  `;
+}
+
+function renderCreator() {
+  $("#view-creator").innerHTML = `
+    <div class="hero">
+      <div>
+        <h2>AI Copilot & Compliance Verification Desk</h2>
+        <p>Offline-safe content generation with grounding docs, compliance scoring, hooks, and schedule queue integration.</p>
+      </div>
+    </div>
+
+    <div class="grid sidebar-main">
+      <div class="card">
+        <form class="form" id="creator-form">
+          <div>
+            <label for="creator-platform">Platform</label>
+            <select id="creator-platform">
+              <option>Facebook</option>
+              <option>Instagram</option>
+              <option>LinkedIn</option>
+              <option>Website</option>
+            </select>
+          </div>
+          <div>
+            <label for="creator-campaign">Campaign</label>
+            <select id="creator-campaign">
+              <option>General</option>
+              <option>Safe Haven 2026</option>
+              <option>Legacy Guard</option>
+              <option>PAHS Athletics 2026</option>
+              <option>Q4 Preparation</option>
+            </select>
+          </div>
+          <div>
+            <label for="creator-doc">Grounding Document</label>
+            <select id="creator-doc">
+              <option value="">No document</option>
+              ${state.documents.map(doc => `<option value="${escapeHtml(doc.id)}">${escapeHtml(doc.name)}</option>`).join("")}
+            </select>
+          </div>
+          <div>
+            <label for="creator-time">Desired Time to Post</label>
+            <input id="creator-time" type="datetime-local" value="2026-05-26T14:00">
+          </div>
+          <div>
+            <label for="creator-prompt">Core Promotion or AI Prompt</label>
+            <textarea id="creator-prompt" placeholder="Type campaign idea, customer feedback, or pasted draft..."></textarea>
+          </div>
+          <button class="primary-btn" type="submit">✨ Generate Vetted Content</button>
+        </form>
+      </div>
+
+      <div class="card">
+        <div class="section-title">
+          <h3>Caption Preview</h3>
+          <span class="badge" id="draft-platform">Draft</span>
+        </div>
+        <div class="output" id="draft-output">${state.generatedDraft ? escapeHtml(state.generatedDraft) : "Provide a prompt and click Generate to run local AI-grounded content creation."}</div>
+        <div id="compliance-output" style="margin-top:1rem"></div>
+        <div class="row" style="margin-top:1rem">
+          <button class="ghost-btn" id="hook-btn" ${state.generatedDraft ? "" : "disabled"}>✨ Brainstorm Hooks</button>
+          <button class="primary-btn" id="schedule-draft-btn" ${state.generatedDraft ? "" : "disabled"}>Approve & Schedule</button>
+        </div>
+        <div class="hooks" id="hooks-output"></div>
+      </div>
+    </div>
+  `;
+
+  $("#creator-form").addEventListener("submit", (event) => {
+    event.preventDefault();
+    generateContent();
+  });
+  $("#hook-btn").addEventListener("click", brainstormHooks);
+  $("#schedule-draft-btn").addEventListener("click", scheduleDraft);
+  renderCreatorOutputs();
+}
+
+function renderCreatorOutputs() {
+  const output = $("#draft-output");
+  if (!output) return;
+  output.textContent = state.generatedDraft || "Provide a prompt and click Generate to run local AI-grounded content creation.";
+  $("#hook-btn").disabled = !state.generatedDraft;
+  $("#schedule-draft-btn").disabled = !state.generatedDraft;
+  $("#compliance-output").innerHTML = state.compliance ? `
+    <div class="alert">
+      <strong>Compliance Review: ${state.compliance.passed ? "PASS" : "REVIEW"}</strong>
+      <p class="muted">Risk: ${escapeHtml(state.compliance.risk)} · ${escapeHtml(state.compliance.findings)}</p>
+    </div>
+  ` : "";
+  $("#hooks-output").innerHTML = state.hooks.map(hook => `
+    <button class="ghost-btn" onclick="applyHook('${encodeURIComponent(hook)}')">${escapeHtml(hook)}</button>
+  `).join("");
+}
+
+function generateContent() {
+  const platform = $("#creator-platform").value;
+  const campaign = $("#creator-campaign").value;
+  const prompt = $("#creator-prompt").value.trim();
+  const docId = $("#creator-doc").value;
+  const doc = state.documents.find(item => item.id === docId);
+  if (!prompt) {
+    toast("Add a campaign prompt first.");
+    return;
+  }
+  const docLine = doc ? `\n\nGrounded in: ${doc.name}\n${doc.mockContent}` : "";
+  state.generatedDraft = `### Latimore ${platform} Draft — ${campaign}
+
+Protecting today means making the next decision easier for your family, business, or school community.
+
+${prompt}
+
+What to do next:
+1. Review your current protection gap.
+2. Confirm whether your rates, beneficiaries, and emergency planning are current.
+3. Message Latimore Life & Legacy LLC for a no-pressure policy review.
+
+#TheBeatGoesOn${docLine}`;
+  state.compliance = {
+    passed: true,
+    risk: /\d/.test(state.generatedDraft) ? "low" : "none",
+    findings: /\d/.test(state.generatedDraft)
+      ? "Specific numbers detected. Verify rate tables and avoid unauthorized guarantees before publishing."
+      : "No hard guarantees or high-risk claims detected."
+  };
+  state.hooks = [];
+  renderCreatorOutputs();
+  toast("Generated a compliance-vetted draft.");
+}
+
+function brainstormHooks() {
+  state.hooks = [
+    "🏠 Is your family's biggest asset protected if the unthinkable happens?",
+    "📌 Before you assume your coverage is current, check this one gap.",
+    "💡 A legacy plan is not fear-based. It is family-based."
+  ];
+  renderCreatorOutputs();
+  toast("Generated 3 hooks.");
+}
+
+function applyHook(encoded) {
+  const hook = decodeURIComponent(encoded);
+  state.generatedDraft = `${hook}\n\n${state.generatedDraft}`;
+  state.hooks = state.hooks.filter(item => item !== hook);
+  renderCreatorOutputs();
+}
+
+function scheduleDraft() {
+  const post = {
+    id:`sp-${Date.now()}`,
+    title:"AI Assisted Post",
+    platform:$("#creator-platform").value,
+    caption:state.generatedDraft,
+    status:"scheduled",
+    scheduledAt:$("#creator-time").value,
+    campaign:$("#creator-campaign").value
+  };
+  state.scheduledPosts.unshift(post);
+  renderSchedule();
+  switchView("schedule");
+  toast("Draft added to schedule queue.");
+}
+
+function cloneTemplate(id) {
+  const tpl = state.templates.find(item => item.id === id);
+  switchView("creator");
+  setTimeout(() => {
+    $("#creator-platform").value = tpl.platform;
+    $("#creator-campaign").value = tpl.campaign || "General";
+    $("#creator-prompt").value = `${tpl.title}\n\n${tpl.body}\n\nCTA: ${tpl.cta}`;
+    toast("Template cloned into Content AI.");
+  }, 0);
+}
+
+function scheduleTemplate(id) {
+  const tpl = state.templates.find(item => item.id === id);
+  state.scheduledPosts.unshift({
+    id:`sp-${Date.now()}`,
+    title:tpl.title,
+    platform:tpl.platform,
+    caption:`${tpl.body}\n\n${tpl.cta}\n\n${tpl.hashtags.map(tag => `#${tag}`).join(" ")}`,
+    status:"scheduled",
+    scheduledAt:"2026-05-26T14:00",
+    campaign:tpl.campaign || "General"
+  });
+  renderSchedule();
+  toast("Template added to schedule.");
+}
+
+function renderComments() {
+  $("#view-comments").innerHTML = `
+    <div class="hero">
+      <div class="hero-row">
+        <div>
+          <h2>Incoming Comment Stream</h2>
+          <p>Review consumer queries, flag compliance risk, and trigger structured sentiment analysis.</p>
+        </div>
+        <button class="ghost-btn" onclick="simulateComment()">Simulate Local Comment Influx</button>
+      </div>
+    </div>
+
+    <div class="grid sidebar-main">
+      <div class="card">
+        <form class="form" id="comment-form">
+          <div>
+            <label for="comment-author">Handle</label>
+            <input id="comment-author" placeholder="@insurance_shopper">
+          </div>
+          <div>
+            <label for="comment-platform">Social Platform</label>
+            <select id="comment-platform"><option>Facebook</option><option>Instagram</option><option>LinkedIn</option></select>
+          </div>
+          <div>
+            <label for="comment-body">Comment Text Body</label>
+            <textarea id="comment-body" placeholder="Ask about quotes, complaints, or compliance questions..."></textarea>
+          </div>
+          <button class="primary-btn" type="submit">Inject Inbound Comment</button>
+        </form>
+      </div>
+      <div class="stack">
+        ${state.comments.map(commentCard).join("")}
+      </div>
+    </div>
+  `;
+  $("#comment-form").addEventListener("submit", (event) => {
+    event.preventDefault();
+    addComment();
+  });
+  updateBadges();
+}
+
+function commentCard(comment) {
+  const analysis = comment.analysis;
+  return `
+    <article class="comment-card">
+      <div class="card-title">
+        <div>
+          <h3>${escapeHtml(comment.author)}</h3>
+          <div class="comment-meta">${escapeHtml(comment.platform)} · Related Post: "${escapeHtml(comment.postTitle)}"</div>
+        </div>
+        <span class="badge ${analysis ? "green" : "amber"}">${analysis ? "analyzed" : "pending"}</span>
+      </div>
+      <p><em>"${escapeHtml(comment.body)}"</em></p>
+      ${analysis ? `
+        <div class="analysis-grid">
+          <div class="analysis-box"><span>Sentiment</span><strong>${escapeHtml(analysis.sentiment)} (${Math.round(analysis.confidence * 100)}%)</strong></div>
+          <div class="analysis-box"><span>Intent</span><strong>${escapeHtml(analysis.intent)}</strong></div>
+          <div class="analysis-box"><span>Lead Potential</span><strong>${escapeHtml(analysis.lead_potential)}</strong></div>
+          <div class="analysis-box"><span>Compliance</span><strong>${escapeHtml(analysis.compliance_risk)}</strong></div>
+        </div>
+        <p class="small"><strong>Topics:</strong> ${analysis.topics.map(escapeHtml).join(", ")}</p>
+        <p class="small"><strong>Recommended action:</strong> ${escapeHtml(analysis.recommended_action)}</p>
+      ` : `
+        <button class="primary-btn" onclick="analyzeComment('${comment.id}')">✨ Analyze Comment Sentiment & Intent</button>
+      `}
+      <div class="row" style="margin-top:.8rem">
+        <button class="ghost-btn" onclick="draftReply('${comment.id}')">Draft Reply</button>
+        <button class="ghost-btn" onclick="sendAgentObjective('Review comment from ${escapeJs(comment.author)} for sales intent and compliance risk.')">Send to Agent</button>
+      </div>
+      <div class="output hidden" id="reply-${comment.id}" style="margin-top:.8rem;min-height:auto"></div>
+    </article>
+  `;
+}
+
+function escapeJs(value) {
+  return String(value ?? "").replaceAll("\\", "\\\\").replaceAll("'", "\\'");
+}
+
+function addComment() {
+  const authorInput = $("#comment-author").value.trim();
+  const body = $("#comment-body").value.trim();
+  if (!authorInput || !body) {
+    toast("Add both author and comment text.");
+    return;
+  }
+  state.comments.unshift({
+    id:`comm-${Date.now()}`,
+    author: authorInput.startsWith("@") ? authorInput : `@${authorInput}`,
+    body,
+    platform:$("#comment-platform").value,
+    postTitle:"General Topic Post",
+    createdAt:new Date().toISOString(),
+    analysis:null
+  });
+  renderComments();
+  toast("Inbound comment added.");
+}
+
+function simulateComment() {
+  state.comments.unshift({
+    id:`comm-${Date.now()}`,
+    author:"@local_parent_76",
+    body:"Does mortgage protection still help if one spouse is self-employed and our school district taxes keep rising?",
+    platform:"Facebook",
+    postTitle:"Mortgage Protection Explained",
+    createdAt:new Date().toISOString(),
+    analysis:null
+  });
+  renderComments();
+}
+
+function analyzeComment(id) {
+  const comment = state.comments.find(item => item.id === id);
+  if (!comment) return;
+  const text = comment.body.toLowerCase();
+  const purchase = /(rate|lock|quote|recommend|self-employed|mortgage|planning|setup|protect)/.test(text);
+  const complaint = /(hate|scam|run|claim|payout|hard)/.test(text);
+  comment.analysis = {
+    sentiment: complaint ? "negative" : purchase ? "positive" : "neutral",
+    confidence: complaint ? .96 : .94,
+    intent: complaint ? "complaint" : purchase ? "purchase_interest" : "question",
+    urgency: purchase ? "high" : "medium",
+    topics: purchase ? ["mortgage protection", "localized planning"] : ["trust", "claims process"],
+    trending_terms: purchase ? ["rate protection", "school district"] : ["claim", "payout"],
+    lead_potential: purchase ? "high" : "low",
+    compliance_risk: complaint ? "medium" : "none",
+    recommended_action: purchase
+      ? "Invite to a no-pressure policy review and avoid guarantee language."
+      : "Acknowledge concern, avoid defensive claims, and move to DM."
+  };
+  renderComments();
+  toast("Comment analyzed.");
+}
+
+function draftReply(id) {
+  const comment = state.comments.find(item => item.id === id);
+  const target = $(`#reply-${id}`);
+  if (!target) return;
+  target.classList.remove("hidden");
+  target.textContent = `Thanks for asking. The right structure depends on your household, budget, and timing, so we would avoid one-size-fits-all guidance in the comments. Send Latimore Life & Legacy LLC a DM and we can walk through a clear review with no pressure.`;
+}
+
+function renderSchedule() {
+  $("#view-schedule").innerHTML = `
+    <div class="hero">
+      <div class="hero-row">
+        <div>
+          <h2>Social Schedule & Queue</h2>
+          <p>Vetted content approved and queued for publishing.</p>
+        </div>
+        <span class="badge green">${state.scheduledPosts.length} queued</span>
+      </div>
+    </div>
+    <div class="stack">
+      ${state.scheduledPosts.length ? state.scheduledPosts.map(post => `
+        <article class="schedule-card">
+          <div class="card-title">
+            <div>
+              <h3>${escapeHtml(post.title)}</h3>
+              <div class="comment-meta">${escapeHtml(post.platform)} · Campaign: ${escapeHtml(post.campaign)} · ${new Date(post.scheduledAt).toLocaleString()}</div>
+            </div>
+            <span class="badge ${post.status === "published" ? "green" : "amber"}">${escapeHtml(post.status)}</span>
+          </div>
+          <p class="output" style="min-height:auto">${escapeHtml(post.caption)}</p>
+          <div class="row">
+            <button class="primary-btn" onclick="publishPost('${post.id}')">Publish Now</button>
+            <button class="ghost-btn" onclick="copyTextById('post-${post.id}', ${JSON.stringify('Post copied.')})">Copy Caption</button>
+          </div>
+          <textarea id="post-${post.id}" class="hidden">${escapeHtml(post.caption)}</textarea>
+        </article>
+      `).join("") : `<div class="card"><p class="muted">No scheduled posts yet. Craft something in Content AI.</p></div>`}
+    </div>
+  `;
+}
+
+function publishPost(id) {
+  const post = state.scheduledPosts.find(item => item.id === id);
+  if (!post) return;
+  post.status = "published";
+  renderSchedule();
+  toast("Post marked published.");
+}
+
+function renderFiles() {
+  $("#view-files").innerHTML = `
+    <div class="hero">
+      <div class="hero-row">
+        <div>
+          <h2>Revenue File OS</h2>
+          <p>Canonical folders, grounded files, prompt library, and Codex automation rules.</p>
+        </div>
+        <div class="row">
+          <label class="ghost-btn no-print" style="margin:0;text-transform:none;letter-spacing:0">
+            Upload File
+            <input id="file-upload" type="file" class="hidden">
+          </label>
+          <button class="primary-btn" onclick="organizeFiles()">Run Organizer</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid two">
+      <div class="card">
+        <div class="section-title"><h3>Canonical Folder Structure</h3></div>
+        <div class="stack">
+          ${INITIAL_DATA.folders.map(folder => `
+            <div class="folder-card">
+              <div class="card-title"><h3>${escapeHtml(folder.root)}</h3><span class="badge">tracked</span></div>
+              <div class="folder-list">
+                ${folder.items.map(item => `
+                  <div class="file-row"><span>${escapeHtml(item.name)}</span><span class="badge ${item.status === "legal" ? "red" : item.status === "manual" ? "amber" : "green"}">${escapeHtml(item.status)}</span></div>
+                `).join("")}
+              </div>
+            </div>
+          `).join("")}
+        </div>
+      </div>
+      <div class="card">
+        <div class="section-title"><h3>Grounded Files</h3></div>
+        <div class="stack">
+          ${state.documents.map(doc => `
+            <div class="doc-card">
+              <div class="card-title">
+                <div><h3>${escapeHtml(doc.name)}</h3><div class="comment-meta">${escapeHtml(doc.size)} · Uploaded ${escapeHtml(doc.uploadedAt)}</div></div>
+                <span class="badge green">indexed</span>
+              </div>
+              <p class="muted">${escapeHtml(doc.mockContent)}</p>
+              <button class="ghost-btn" onclick="summarizeDoc('${doc.id}')">✨ Summarize with AI</button>
+            </div>
+          `).join("")}
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:1rem">
+      <div class="section-title"><h3>Codex Prompt Library</h3><span class="badge">automation-ready</span></div>
+      <div class="grid two">
+        ${INITIAL_DATA.codexPrompts.map((prompt, index) => `
+          <div class="template-card">
+            <div class="card-title">
+              <h3>${escapeHtml(prompt.title)}</h3>
+              <span class="badge">${escapeHtml(prompt.tag)}</span>
+            </div>
+            <p>${escapeHtml(prompt.body)}</p>
+            <button class="primary-btn" onclick="openCodexPrompt(${index})">Open Prompt</button>
+          </div>
+        `).join("")}
+      </div>
+    </div>
+  `;
+  $("#file-upload").addEventListener("change", uploadFile);
+}
+
+function uploadFile(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  state.documents.push({
+    id:`doc-${Date.now()}`,
+    name:file.name,
+    size:`${(file.size / (1024 * 1024)).toFixed(1)} MB`,
+    uploadedAt:new Date().toISOString().slice(0,10),
+    mockContent:`User uploaded file containing business parameters for ${file.name.replace(/\.[^/.]+$/, "")}.`
+  });
+  renderFiles();
+  toast(`Indexed ${file.name}.`);
+}
+
+function summarizeDoc(id) {
+  const doc = state.documents.find(item => item.id === id);
+  if (!doc) return;
+  openModal(`Document Intelligence: ${doc.name}`, "Grounded file summary", `Executive summary:
+${doc.mockContent}
+
+Content ideas:
+1. Turn this file into a short educational post.
+2. Build one CTA linked to policy reviews, district outreach, or referral growth.
+
+Compliance note:
+Verify any specific rate, date, or legal claim before publishing.`);
+}
+
+function organizeFiles() {
+  tLine("[FILE-OS] Scanning /outputs, /marketing, /proposals, /clients, /legal, /hub-os...", "gold");
+  tLine("[FILE-OS] Applied naming convention YYYY-MM-DD_[type]_[audience]_[channel].ext", "ok");
+  tLine("[FILE-OS] Logged 18 checks, 0 destructive operations.", "dim");
+  toast("File organizer simulation completed.");
+}
+
+function openCodexPrompt(index) {
+  const prompt = INITIAL_DATA.codexPrompts[index];
+  openModal(prompt.title, prompt.tag, prompt.body);
+}
+
+function renderAgent() {
+  $("#view-agent").innerHTML = `
+    <div class="hero">
+      <div class="hero-row">
+        <div>
+          <h2>Latimore Hub Agent</h2>
+          <p>Interactive command shell inspired by the uploaded Hub Agent v2 interface.</p>
+        </div>
+        <div class="row">
+          <button class="ghost-btn" onclick="resetTerminal()">Reset</button>
+          <button class="primary-btn" onclick="sendAgentObjective('Build a weekly action plan across insurance sales, Hub OS development, school district outreach, and PAHS sponsorship.')">Build Weekly Plan</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="terminal">
+      <div class="term-head">
+        <strong>latimore@hub:~</strong>
+        <span class="badge green">claude-sonnet-4-6 · simulated</span>
+      </div>
+      <div class="term-output" id="terminal-output"></div>
+      <form class="term-input" id="terminal-form">
+        <input id="terminal-input" placeholder="help, status, leads, balance, grants, workflow, clear">
+        <button class="primary-btn" type="submit">Send</button>
+      </form>
+    </div>
+  `;
+  initTerminal();
+}
+
+function initTerminal() {
+  const output = $("#terminal-output");
+  if (output && !output.dataset.ready) {
+    output.dataset.ready = "1";
+    tLine("LATIMORE LIFE & LEGACY LLC", "gold");
+    tLine("Protecting Today. Securing Tomorrow. #TheBeatGoesOn", "dim");
+    tLine("Hub Agent online. Type `help` to begin.", "ok");
+  }
+  $("#terminal-form").addEventListener("submit", (event) => {
+    event.preventDefault();
+    const input = $("#terminal-input");
+    const command = input.value.trim();
+    input.value = "";
+    if (command) runCommand(command);
+  });
+}
+
+function tLine(text, cls = "") {
+  const output = $("#terminal-output");
+  if (!output) return;
+  const div = document.createElement("div");
+  div.className = `term-line ${cls}`;
+  div.textContent = text;
+  output.appendChild(div);
+  output.scrollTop = output.scrollHeight;
+}
+
+function runCommand(command) {
+  tLine(`latimore@hub:~$ ${command}`, "gold");
+  const normalized = command.toLowerCase();
+  const commands = {
+    help: () => tLine("commands: help · status · leads · balance · grants · workflow · report · clear", "dim"),
+    status: () => tLine("Hub OS: online | Agent: idle | GA4: connected | File OS: indexed", "ok"),
+    leads: () => tLine("Active: 12 | Warm: 7 | Nurture: 5 | Pipeline: $8,400", "dim"),
+    balance: () => tLine("PAHS CampusBox: $460.00 — due item imported from source app", "err"),
+    grants: () => tLine("CFA Active Rec Phase 2: deadline May 31 | action: finalize docs", "gold"),
+    workflow: () => runWorkflow(),
+    report: () => { renderReports(); switchView("reports"); },
+    clear: () => { $("#terminal-output").innerHTML = ""; }
+  };
+  (commands[normalized] || (() => tLine(`not found: ${command} (try: help)`, "err")))();
+}
+
+function resetTerminal() {
+  $("#terminal-output").innerHTML = "";
+  tLine("[SYSTEM] Session reset.", "dim");
+  tLine("Hub Agent online. Ready.", "ok");
+}
+
+function sendAgentObjective(text) {
+  switchView("agent");
+  setTimeout(() => {
+    $("#agent-status").textContent = "Agent running";
+    tLine(`OBJECTIVE: ${text}`, "gold");
+    tLine("PLAN: 1) Load brand context 2) Check files/metrics 3) Draft action output 4) Log next step", "dim");
+    tLine("RESULT: Objective queued in local simulation. Use prompt modal copy for external Claude/Codex execution.", "ok");
+    $("#agent-status").textContent = "Agent idle";
+  }, 0);
+}
+
+function renderReports() {
+  const baseline = getTotals(INITIAL_DATA.baselineMetrics);
+  const current = getTotals(INITIAL_DATA.currentMetrics);
+  if (!state.weeklyReport) {
+    state.weeklyReport = `### Weekly Executive Marketing Synthesis
+
+1. LinkedIn shows the strongest acceleration, with impressions moving from ${fmt(INITIAL_DATA.baselineMetrics.linkedin.impressions)} to ${fmt(INITIAL_DATA.currentMetrics.linkedin.impressions)}.
+2. Total attributed leads moved from ${baseline.leads} to ${current.leads}, a ${pct(current.leads, baseline.leads)} change.
+3. PAHS/school-district safety content should be converted into a Thursday educational post and a district proposal sequence.
+4. Compliance reminder: verify numeric rate, coverage, legal, and guarantee language before publishing.`;
+  }
+  $("#view-reports").innerHTML = `
+    <div class="hero">
+      <div class="hero-row">
+        <div>
+          <h2>Branded Performance Reports</h2>
+          <p>Generate, review, and print custom export documents detailing metrics performance.</p>
+        </div>
+        <button class="primary-btn" onclick="window.print()">Print PDF Report</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="section-title"><h3>Latimore Hub Weekly Risk & Analytics Report</h3><span class="badge">May 15–22, 2026</span></div>
+      <div class="grid kpis">
+        ${kpiCard("Current Leads", fmt(current.leads), `${pct(current.leads, baseline.leads)} vs baseline`, "👥")}
+        ${kpiCard("Current Clicks", fmt(current.clicks), `${pct(current.clicks, baseline.clicks)} vs baseline`, "🖱️")}
+        ${kpiCard("Revenue Pipeline", "$8,400", "May projected", "💵")}
+        ${kpiCard("Templates", String(state.templates.length), "Seeded campaigns", "📚")}
+      </div>
+      <div class="output" style="margin-top:1rem">${escapeHtml(state.weeklyReport)}</div>
+      <div class="row" style="margin-top:1rem">
+        <button class="ghost-btn" onclick="regenerateReport()">✨ AI Performance Synthesis</button>
+        <button class="ghost-btn" onclick="copyReport()">Copy Report</button>
+      </div>
+    </div>
+  `;
+}
+
+function regenerateReport() {
+  state.weeklyReport += `
+
+Generated ${nowStamp()}:
+Prioritize LinkedIn corporate risk content, Facebook family-protection questions, and one school district decision-maker outreach this week.`;
+  renderReports();
+  toast("Report synthesis refreshed.");
+}
+
+function copyReport() {
+  copyText(state.weeklyReport, "Report copied.");
+}
+
+function runStage(id) {
+  state.workflowDone.add(String(id));
+  const node = INITIAL_DATA.workflowNodes.find(item => String(item.id) === String(id));
+  renderWorkflow();
+  tLine(`[WORKFLOW] Completed stage ${id}: ${node ? node.title : "Unknown"}`, "ok");
+  toast(`Stage ${id} marked complete.`);
+}
+
+function runWorkflow() {
+  INITIAL_DATA.workflowNodes.forEach(node => state.workflowDone.add(String(node.id)));
+  renderWorkflow();
+  sendAgentObjective("Run the complete Latimore Brand OS and Revenue workflow from brand context through proposal export.");
+  toast("Workflow marked complete.");
+}
+
+function openPrompt(id) {
+  const node = INITIAL_DATA.workflowNodes.find(item => String(item.id) === String(id));
+  if (!node) return;
+  openModal(node.label, node.engine, node.prompt);
+}
+
+function openModal(title, subtitle, text) {
+  state.modalPayload = { title, subtitle, text };
+  $("#modal-title").textContent = title;
+  $("#modal-subtitle").textContent = subtitle;
+  $("#modal-text").value = text;
+  $("#modal-backdrop").classList.add("show");
+}
+
+function closeModal() {
+  $("#modal-backdrop").classList.remove("show");
+}
+
+function copyText(text, message = "Copied.") {
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(text).then(() => toast(message)).catch(() => fallbackCopy(text, message));
+  } else {
+    fallbackCopy(text, message);
+  }
+}
+
+function fallbackCopy(text, message) {
+  const textarea = document.createElement("textarea");
+  textarea.value = text;
+  textarea.style.position = "fixed";
+  textarea.style.opacity = "0";
+  document.body.appendChild(textarea);
+  textarea.select();
+  document.execCommand("copy");
+  textarea.remove();
+  toast(message);
+}
+
+function copyTextById(id, message) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  copyText(el.value || el.textContent, message);
+}
+
+function bindShell() {
+  $("#nav-list").addEventListener("click", (event) => {
+    const btn = event.target.closest(".nav-btn");
+    if (btn) switchView(btn.dataset.view);
+  });
+  $("#theme-btn").addEventListener("click", () => setTheme(state.theme === "dark" ? "light" : "dark"));
+  $("#print-btn").addEventListener("click", () => window.print());
+  $("#run-workflow-btn").addEventListener("click", runWorkflow);
+  $("#modal-close").addEventListener("click", closeModal);
+  $("#modal-backdrop").addEventListener("click", (event) => {
+    if (event.target.id === "modal-backdrop") closeModal();
+  });
+  $("#modal-copy").addEventListener("click", () => copyText($("#modal-text").value, "Prompt copied."));
+  $("#modal-send").addEventListener("click", () => {
+    const text = $("#modal-text").value.slice(0, 220);
+    closeModal();
+    sendAgentObjective(text);
+  });
+}
+
+function renderAll() {
+  renderSources();
+  renderOverview();
+  renderWorkflow();
+  renderTemplates();
+  renderCreator();
+  renderComments();
+  renderSchedule();
+  renderFiles();
+  renderAgent();
+  renderReports();
+  updateBadges();
+}
+
+setTheme(state.theme);
+bindShell();
+renderAll();
+</script>
+</body>
+</html>
