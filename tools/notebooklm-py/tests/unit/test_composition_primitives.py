@@ -1,0 +1,420 @@
+"""Tests for client-owned composition primitives.
+
+Covers the helpers introduced by Stage B1 PR 1 and made live by Stage B1
+PR 2 of the post-refactoring plan
+(``docs/post-refactoring-plan-2026-05-27.md``):
+
+- :class:`notebooklm._session_init.ClientInternals` dataclass
+- :func:`notebooklm._session_init.resolve_seam_defaults`
+- :func:`notebooklm._session_init.compose_client_internals`
+- ``ClientComposed.bind_*`` write-once setters
+- ``ClientComposed`` required-property guards
+
+Session-elimination Phase 3 leaves ``NotebookLMClient`` as both composition
+root and public surface; all composition runtime state belongs to
+``ClientComposed`` or the client-owned collaborator bundle.
+"""
+
+from __future__ import annotations
+
+import asyncio
+import logging
+from typing import Any
+
+import httpx
+import pytest
+
+from _helpers.client_factory import build_client_shell_for_tests
+from notebooklm._client_composed import ClientComposed
+from notebooklm._client_seams import ClientSeams
+from notebooklm._session_init import (
+    ClientInternals,
+    compose_client_internals,
+    resolve_seam_defaults,
+)
+from notebooklm.auth import AuthTokens
+from notebooklm.client import NotebookLMClient
+
+
+def _make_auth() -> AuthTokens:
+    """Build a minimal :class:`AuthTokens` for composition tests.
+
+    Cookies / CSRF / session id are sentinel values — these tests never
+    hit the network; they only need a token shape that passes
+    :func:`_validate_required_cookies`.
+    """
+    return AuthTokens(
+        cookies={"SID": "x", "__Secure-1PSIDTS": "y"},
+        csrf_token="csrf",
+        session_id="sid",
+    )
+
+
+# ---------------------------------------------------------------------------
+# resolve_seam_defaults
+# ---------------------------------------------------------------------------
+
+
+def test_resolve_seam_defaults_returns_module_bindings_when_none() -> None:
+    """All four seams default to the canonical module bindings."""
+    resolved = resolve_seam_defaults(
+        sleep=None,
+        async_client_factory=None,
+        is_auth_error=None,
+        decode_response=None,
+    )
+
+    # ``sleep`` resolves to ``asyncio.sleep`` via the client seam defaults.
+    assert resolved["sleep"] is asyncio.sleep
+
+    # ``async_client_factory`` resolves to :class:`httpx.AsyncClient`.
+    assert resolved["async_client_factory"] is httpx.AsyncClient
+
+    # ``is_auth_error`` resolves to :func:`notebooklm._session_helpers.is_auth_error`
+    # via the lazy import inside :func:`_default_is_auth_error`.
+    from notebooklm._session_helpers import is_auth_error as canonical_is_auth_error
+
+    assert resolved["is_auth_error"] is canonical_is_auth_error
+
+    # ``decode_response`` resolves to :func:`notebooklm.rpc.decode_response`
+    # via the lazy import inside :func:`_default_decode_response`.
+    from notebooklm.rpc import decode_response as canonical_decode_response
+
+    assert resolved["decode_response"] is canonical_decode_response
+
+
+def test_resolve_seam_defaults_passes_through_explicit_callables() -> None:
+    """Explicit callables override the module-binding defaults."""
+
+    async def fake_sleep(_d: float) -> None:
+        """Sentinel callable — identity-checked, never invoked."""
+        return None
+
+    def fake_factory(*_a: Any, **_kw: Any) -> Any:  # pragma: no cover - identity check
+        """Sentinel callable — identity-checked, never invoked."""
+        raise AssertionError
+
+    def fake_is_auth_error(_exc: Exception) -> bool:  # pragma: no cover
+        """Sentinel callable — identity-checked, never invoked."""
+        return False
+
+    def fake_decode(*_a: Any, **_kw: Any) -> Any:  # pragma: no cover
+        """Sentinel callable — identity-checked, never invoked."""
+        return None
+
+    resolved = resolve_seam_defaults(
+        sleep=fake_sleep,
+        async_client_factory=fake_factory,
+        is_auth_error=fake_is_auth_error,
+        decode_response=fake_decode,
+    )
+
+    assert resolved["sleep"] is fake_sleep
+    assert resolved["async_client_factory"] is fake_factory
+    assert resolved["is_auth_error"] is fake_is_auth_error
+    assert resolved["decode_response"] is fake_decode
+
+
+# ---------------------------------------------------------------------------
+# compose_client_internals — client-owned composition root
+# ---------------------------------------------------------------------------
+
+
+def test_compose_client_internals_returns_client_internals() -> None:
+    """The helper returns collaborators + executor while binding ``ClientComposed``."""
+    holder = ClientComposed()
+    internals = compose_client_internals(auth=_make_auth(), composed=holder)
+
+    assert isinstance(internals, ClientInternals)
+    assert holder.executor is internals.executor
+    assert holder.session_collaborators is internals.collaborators
+    assert holder.transport is internals.executor._transport
+    assert holder.chain_host._transport is holder.transport
+    assert holder.chain_builder is not None
+    assert len(holder.middlewares) == 7
+
+
+def test_shell_helpers_carry_client_holders() -> None:
+    """Client shell helpers mirror production holder attributes."""
+    client = build_client_shell_for_tests(auth=_make_auth(), max_concurrent_rpcs=3)
+
+    assert isinstance(client._seams, ClientSeams)
+    assert isinstance(client._composed, ClientComposed)
+    assert client._composed.max_concurrent_rpcs == 3
+    assert client._composed.session_collaborators is client._collaborators
+    assert client._composed.executor is client._rpc_executor
+
+
+def test_notebooklm_client_initializes_client_holders() -> None:
+    """Production clients own the same holder shape returned by composition."""
+    client = NotebookLMClient(_make_auth(), max_concurrent_rpcs=2)
+
+    assert isinstance(client._seams, ClientSeams)
+    assert isinstance(client._composed, ClientComposed)
+    assert client._composed.session_collaborators is client._collaborators
+    assert client._composed.max_concurrent_rpcs == 2
+    assert client._composed.executor is client._rpc_executor
+    assert client._composed.transport is client._rpc_executor._transport
+
+
+def test_invalid_max_concurrent_rpcs_rejected_before_zero_cap_semaphore() -> None:
+    """Production and test construction reject invalid caps before composition use."""
+    auth = _make_auth()
+
+    with pytest.raises(ValueError, match="max_concurrent_rpcs must be >= 1, got 0"):
+        NotebookLMClient(auth, max_concurrent_rpcs=0)
+
+    with pytest.raises(ValueError, match="max_concurrent_rpcs must be >= 1, got 0"):
+        build_client_shell_for_tests(auth, max_concurrent_rpcs=0)
+
+
+def test_prebuilt_client_composed_cap_must_match_constructor_cap() -> None:
+    """A supplied holder cannot silently diverge from validated constructor args."""
+    holder = ClientComposed(max_concurrent_rpcs=5)
+
+    with pytest.raises(
+        ValueError,
+        match=(
+            r"composed\.max_concurrent_rpcs must match max_concurrent_rpcs "
+            r"\(got composed\.max_concurrent_rpcs=5, max_concurrent_rpcs=10\)"
+        ),
+    ):
+        compose_client_internals(
+            auth=_make_auth(),
+            max_concurrent_rpcs=10,
+            composed=holder,
+        )
+
+
+def test_compose_client_internals_refuses_synthetic_error_first(
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """``_refuse_synthetic_error_outside_test_context`` MUST run before any
+    other work in :func:`compose_client_internals`.
+
+    Pins the same contract as
+    :mod:`tests.unit.concurrency.test_synthetic_error_transport_guard` —
+    the guard fires at the *earliest* opportunity. Setting the env var
+    without ``PYTEST_CURRENT_TEST`` must raise from the helper before the
+    seam resolution, validation, or collaborator construction can run.
+    """
+    monkeypatch.setenv("NOTEBOOKLM_VCR_RECORD_ERRORS", "5xx")
+    monkeypatch.delenv("PYTEST_CURRENT_TEST", raising=False)
+
+    with (
+        caplog.at_level(logging.WARNING, logger="notebooklm._core"),
+        pytest.raises(RuntimeError, match="NOTEBOOKLM_VCR_RECORD_ERRORS"),
+    ):
+        compose_client_internals(auth=_make_auth())
+
+
+def test_compose_client_internals_preserves_late_binding_for_decode_response() -> None:
+    """Post-construction ``seams.decode_response = rebound`` MUST still
+    steer the executor's decode path.
+
+    Pins the lambda-closure contract documented in the plan: the executor
+    is wired with ``decode_response=lambda *a, **kw: seams.decode_response(*a, **kw)``
+    so that test reassignments after construction continue to take effect.
+    """
+    seams = ClientSeams(
+        decode_response=lambda *_a, **_kw: None,
+        sleep=asyncio.sleep,
+        is_auth_error=lambda _exc: False,
+    )
+    internals = compose_client_internals(auth=_make_auth(), seams=seams)
+
+    sentinel: list[Any] = []
+
+    def rebound(*args: Any, **kwargs: Any) -> str:
+        """Recording stand-in for ``seams.decode_response``."""
+        sentinel.append(("decoded", args, kwargs))
+        return "rebound-result"
+
+    seams.decode_response = rebound
+
+    # The executor closure should dispatch through the live attribute,
+    # not the value frozen at construction time.
+    result = internals.executor._decode_response("payload", "method-id", allow_null=False)
+    assert result == "rebound-result"
+    assert sentinel and sentinel[-1][0] == "decoded"
+
+
+def test_compose_client_internals_preserves_late_binding_for_is_auth_error() -> None:
+    """Post-construction ``seams.is_auth_error = rebound`` MUST still
+    steer the executor's classifier.
+
+    Mirror of the ``decode_response`` test for the auth-error seam.
+    """
+    seams = ClientSeams(
+        decode_response=lambda *_a, **_kw: None,
+        sleep=asyncio.sleep,
+        is_auth_error=lambda _exc: False,
+    )
+    internals = compose_client_internals(auth=_make_auth(), seams=seams)
+
+    def rebound(exc: Exception) -> bool:
+        """Stand-in classifier — treats KeyError as auth-related."""
+        return isinstance(exc, KeyError)
+
+    seams.is_auth_error = rebound
+
+    assert internals.executor._is_auth_error(KeyError("auth")) is True
+    assert internals.executor._is_auth_error(RuntimeError("nope")) is False
+
+
+def test_compose_client_internals_preserves_late_binding_for_sleep() -> None:
+    """Post-construction ``seams.sleep = rebound`` MUST still steer the
+    executor's backoff path.
+    """
+    seams = ClientSeams(
+        decode_response=lambda *_a, **_kw: None,
+        sleep=asyncio.sleep,
+        is_auth_error=lambda _exc: False,
+    )
+    internals = compose_client_internals(auth=_make_auth(), seams=seams)
+
+    calls: list[float] = []
+
+    async def rebound(delay: float) -> None:
+        """Recording stand-in for ``seams.sleep`` (captures delays)."""
+        calls.append(delay)
+
+    seams.sleep = rebound
+
+    asyncio.run(internals.executor._sleep(0.25))
+    assert calls == [0.25]
+
+
+def test_compose_client_internals_preserves_late_binding_for_refresh_retry_delay() -> None:
+    """Post-construction ``chain_host._refresh_retry_delay = X`` MUST be seen
+    by the executor's ``refresh_retry_delay_provider`` lambda on the next
+    call.
+
+    The integration-test contract is that
+    ``client._composed.chain_host._refresh_retry_delay = 0`` continues
+    to steer the live chain after construction. The lambda
+    ``refresh_retry_delay_provider=lambda: chain_host._refresh_retry_delay``
+    re-reads the attribute on every invocation, so this is a live binding,
+    not a frozen snapshot.
+    """
+    holder = ClientComposed()
+    internals = compose_client_internals(auth=_make_auth(), composed=holder)
+
+    chain_host = holder.chain_host
+    # The provider lambda must dereference the *current* attribute on
+    # each call — not the value captured at construction time.
+    initial = chain_host._refresh_retry_delay
+    assert internals.executor._refresh_retry_delay_provider() == initial
+
+    chain_host._refresh_retry_delay = 0.99
+    assert internals.executor._refresh_retry_delay_provider() == 0.99
+
+
+def test_compose_client_internals_executor_timeout_provider_reads_lifecycle() -> None:
+    """The executor's ``timeout_provider`` reads from the live
+    ``ClientLifecycle._timeout`` collaborator attribute.
+
+    Pins the documented closure shape
+    ``timeout_provider=lambda: collaborators.lifecycle._timeout`` (plan
+    line 253). A lifecycle-side mutation must surface on the next executor
+    call without re-binding.
+    """
+    internals = compose_client_internals(auth=_make_auth())
+
+    initial = internals.collaborators.lifecycle._timeout
+    assert internals.executor._timeout_provider() == initial
+
+    internals.collaborators.lifecycle._timeout = 99.0
+    assert internals.executor._timeout_provider() == 99.0
+
+
+# ---------------------------------------------------------------------------
+# ClientComposed write-once binders
+# ---------------------------------------------------------------------------
+
+
+def test_client_composed_executor_binder_raises_on_double_bind() -> None:
+    holder = ClientComposed()
+    compose_client_internals(auth=_make_auth(), composed=holder)
+
+    with pytest.raises(RuntimeError, match="_executor already bound"):
+        holder.bind_executor(holder.executor)
+
+
+def test_client_composed_transport_binder_raises_on_double_bind() -> None:
+    holder = ClientComposed()
+    compose_client_internals(auth=_make_auth(), composed=holder)
+
+    with pytest.raises(RuntimeError, match="_transport already bound"):
+        holder.bind_transport(holder.transport)
+
+
+def test_client_composed_chain_metadata_binder_raises_on_double_bind() -> None:
+    holder = ClientComposed()
+    compose_client_internals(auth=_make_auth(), composed=holder)
+
+    # Build a sentinel ``WiredMiddleware`` carrying the existing values so
+    # the rejection comes from the write-once guard, not a missing field.
+    from notebooklm._session_init import WiredMiddleware
+
+    wired = WiredMiddleware(
+        chain_builder=holder.chain_builder,
+        middlewares=holder.middlewares,
+        authed_post_chain=holder.chain_host._authed_post_chain,
+    )
+    with pytest.raises(RuntimeError, match="_chain_builder already bound"):
+        holder.bind_chain_metadata(wired)
+
+
+def test_client_composed_chain_host_binder_raises_on_double_bind() -> None:
+    holder = ClientComposed()
+    compose_client_internals(auth=_make_auth(), composed=holder)
+
+    with pytest.raises(RuntimeError, match="_chain_host already bound"):
+        holder.bind_chain_host(holder.chain_host)
+
+
+def test_client_composed_session_collaborators_binder_raises_on_double_bind() -> None:
+    holder = ClientComposed()
+    internals = compose_client_internals(auth=_make_auth(), composed=holder)
+
+    with pytest.raises(RuntimeError, match="_session_collaborators already bound"):
+        holder.bind_session_collaborators(internals.collaborators)
+
+
+# ---------------------------------------------------------------------------
+# ClientComposed required-property guards
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("attr_name", "message"),
+    [
+        ("transport", "_transport"),
+        ("executor", "_executor"),
+        ("chain_host", "_chain_host"),
+        ("chain_builder", "_chain_builder"),
+        ("middlewares", "_middlewares"),
+        ("session_collaborators", "_session_collaborators"),
+    ],
+)
+def test_client_composed_properties_raise_before_binding(attr_name: str, message: str) -> None:
+    holder = ClientComposed()
+
+    with pytest.raises(
+        RuntimeError,
+        match=rf"ClientComposed not fully constructed: {message} is None",
+    ):
+        getattr(holder, attr_name)
+
+
+def test_client_shell_reads_composition_from_client_composed() -> None:
+    client = build_client_shell_for_tests(_make_auth())
+
+    assert client._rpc_executor is client._composed.executor
+    assert client._rpc_executor._transport is client._composed.transport
+    assert client._composed.chain_host._transport is client._composed.transport
+    assert client._composed.chain_builder._drain_tracker is client._collaborators.drain_tracker
+    assert client._composed.middlewares[0]._drain_tracker is client._collaborators.drain_tracker
+    assert client._composed.middlewares[1]._metrics is client._collaborators.metrics
