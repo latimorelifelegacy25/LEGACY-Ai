@@ -31,7 +31,10 @@ Protecting Today. Securing Tomorrow.
 - 401(k) vs. properly structured life insurance education
 - Estate planning add-on
 - Legacy Readiness Score
-- Guide download CTA
+- Branded PDF guide download CTA
+- Resend email delivery for guides
+- Completed-funnel email follow-up
+- Advisor/internal notification emails
 - Booking CTA
 - Supabase lead capture
 - Supabase activity logging
@@ -56,6 +59,16 @@ Add your Supabase service role key:
 SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 ```
 
+Optional Resend email automation:
+
+```txt
+RESEND_API_KEY=your_resend_api_key
+RESEND_FROM_EMAIL="Latimore Life & Legacy <noreply@yourdomain.com>"
+RESEND_REPLY_TO=jackson@yourdomain.com
+RESEND_INTERNAL_NOTIFY_TO=jackson@yourdomain.com
+NEXT_PUBLIC_SITE_URL=https://latimorelifelegacy.com
+```
+
 Run the SQL in:
 
 ```txt
@@ -72,6 +85,27 @@ Open:
 
 ```txt
 http://localhost:3000/education
+```
+
+## Email Automation
+
+The guide button now generates a branded PDF and attempts to email it to the lead using Resend.
+
+Email behavior:
+
+```txt
+Completed Legacy Checkup -> client follow-up email + advisor notification
+Send My Education Guide -> branded PDF download + PDF email attachment + advisor notification
+```
+
+If Resend environment variables are missing, the guide still downloads as a PDF and the page displays a setup notice.
+
+Resend setup requirements:
+
+```txt
+1. Create a Resend API key.
+2. Verify your sending domain.
+3. Add RESEND_API_KEY and RESEND_FROM_EMAIL to .env.local.
 ```
 
 ## Booking CTA
@@ -97,6 +131,7 @@ Viewed 401k vs IUL Education
 Viewed GRIPP Module
 Requested Education Guide
 Downloaded Guide
+Emailed Guide
 Clicked Book With Jackson
 Completed Legacy Checkup
 ```

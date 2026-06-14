@@ -11,8 +11,10 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.48.1",
     "next": "^15.1.6",
+    "pdf-lib": "^1.17.1",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "resend": "^6.12.4"
   },
   "devDependencies": {
     "@types/node": "^22.10.10",

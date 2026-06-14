@@ -21,6 +21,21 @@ interface Inquiry {
   contact: Contact
 }
 
+const OS_MODULES = [
+  { href: '/admin/content-tool', icon: '✍️', title: 'AI Content Generator', desc: 'Generate brand-consistent weekly social posts', color: 'bg-purple-600', badge: 'NEW' },
+  { href: '/carriers', icon: '🏛️', title: 'Carrier Buildout', desc: 'North American, F&G, Ethos, Foresters, Corebridge', color: 'bg-blue-700', badge: 'NEW' },
+  { href: '/products', icon: '📦', title: 'Products Suite', desc: 'IUL, FIA, Term, Living Benefits, Final Expense', color: 'bg-green-700', badge: 'NEW' },
+  { href: '/personas', icon: '👥', title: 'Client Personas', desc: '5 market segments with scripts & product mapping', color: 'bg-pink-600', badge: 'NEW' },
+  { href: '/business', icon: '🏢', title: 'Business Services', desc: 'Key Person, Buy-Sell, Executive Bonus, School Districts', color: 'bg-amber-700', badge: 'NEW' },
+  { href: '/admin/pipeline', icon: '📊', title: 'Pipeline Management', desc: 'Drag-and-drop Kanban board for lead management', color: 'bg-[#2C3E50]', badge: null },
+  { href: '/admin/analytics', icon: '📈', title: 'Analytics Dashboard', desc: 'Lead attribution and conversion tracking', color: 'bg-green-600', badge: null },
+  { href: '/admin/social', icon: '📱', title: 'Social Workflow', desc: 'AI-powered social media content system', color: 'bg-blue-600', badge: null },
+  { href: '/playbook', icon: '📖', title: 'OS Master Playbook', desc: 'Community authority framework & DM scripts', color: 'bg-indigo-600', badge: null },
+  { href: '/campaign', icon: '🏈', title: 'PAHS Campaign Module', desc: 'Ethos integration, game day scripts & direct mail', color: 'bg-orange-600', badge: null },
+  { href: '/calendar', icon: '📅', title: '12-Month Calendar', desc: 'Annual strategic calendar with weekly action plans', color: 'bg-teal-600', badge: null },
+  { href: '/scripts', icon: '🎯', title: 'Client Presentation Scripts', desc: 'GFI 10-step system — Appointment 1 guide', color: 'bg-red-600', badge: null },
+]
+
 export default function AdminDashboard() {
   const [inquiries, setInquiries] = useState<Inquiry[]>([])
   const [loading, setLoading] = useState(true)
@@ -45,7 +60,7 @@ export default function AdminDashboard() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-900 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#2C3E50] mx-auto mb-4"></div>
           <p className="text-gray-600">Loading dashboard...</p>
         </div>
       </div>
@@ -54,178 +69,143 @@ export default function AdminDashboard() {
 
   return (
     <main className="min-h-screen bg-gray-50">
-      <div className="container mx-auto p-6 space-y-8">
-        {/* Header */}
-        <div className="flex items-center justify-between">
+      {/* Header */}
+      <div className="bg-[#2C3E50] text-white px-6 py-8">
+        <div className="max-w-6xl mx-auto flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-primary-900">LatimoreHub Admin</h1>
-            <p className="text-gray-600">Comprehensive CRM and Content Management System</p>
+            <h1 className="text-3xl font-bold">LatimoreHub Admin</h1>
+            <p className="text-gray-300 mt-1">Latimore Life & Legacy LLC — OS Command Center</p>
           </div>
-          <div className="text-sm text-gray-500">
-            Latimore Life & Legacy LLC • #TheBeatGoesOn
+          <div className="text-right text-sm text-gray-400">
+            <p className="text-[#C49A6C] font-semibold">"Protecting Today. Securing Tomorrow."</p>
+            <p>#TheBeatGoesOn | PA DOI #1268820</p>
           </div>
         </div>
+      </div>
+
+      <div className="max-w-6xl mx-auto px-6 py-8 space-y-8">
 
         {/* Quick Stats */}
-        <div className="grid md:grid-cols-4 gap-6">
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <div className="flex items-center">
-              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                <div className="w-6 h-6 border-2 border-blue-600 rounded-sm"></div>
-              </div>
-              <div className="ml-4">
-                <div className="text-2xl font-bold text-primary-900">{inquiries.length}</div>
-                <div className="text-sm text-gray-600">New Inquiries</div>
-              </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {[
+            { label: 'New Inquiries', value: inquiries.length, color: 'bg-blue-50 border-blue-200', textColor: 'text-blue-700' },
+            { label: 'Velocity Leads', value: inquiries.filter(i => i.interestType === 'Velocity').length, color: 'bg-green-50 border-green-200', textColor: 'text-green-700' },
+            { label: 'Depth Leads', value: inquiries.filter(i => i.interestType === 'Depth').length, color: 'bg-purple-50 border-purple-200', textColor: 'text-purple-700' },
+            { label: 'Group Leads', value: inquiries.filter(i => i.interestType === 'Group').length, color: 'bg-amber-50 border-amber-200', textColor: 'text-amber-700' },
+          ].map(stat => (
+            <div key={stat.label} className={`bg-white rounded-xl border ${stat.color} p-5`}>
+              <div className={`text-3xl font-bold ${stat.textColor}`}>{stat.value}</div>
+              <div className="text-sm text-gray-600 mt-1">{stat.label}</div>
             </div>
-          </div>
+          ))}
+        </div>
 
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <div className="flex items-center">
-              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                <div className="w-6 h-6 border-2 border-green-600 rounded-circle"></div>
-              </div>
-              <div className="ml-4">
-                <div className="text-2xl font-bold text-primary-900">
-                  {inquiries.filter(i => i.interestType === 'Velocity').length}
+        {/* OS Modules Grid */}
+        <div>
+          <h2 className="text-xl font-bold text-[#2C3E50] mb-4">Latimore OS Modules</h2>
+          <div className="grid md:grid-cols-4 gap-4">
+            {OS_MODULES.map(mod => (
+              <Link
+                key={mod.href}
+                href={mod.href}
+                className="bg-white rounded-xl border border-gray-100 p-5 hover:shadow-md transition-all group relative overflow-hidden"
+              >
+                {mod.badge && (
+                  <span className="absolute top-3 right-3 bg-purple-600 text-white text-xs px-2 py-0.5 rounded-full font-bold">{mod.badge}</span>
+                )}
+                <div className={`w-10 h-10 ${mod.color} rounded-lg flex items-center justify-center text-xl mb-3`}>
+                  {mod.icon}
                 </div>
-                <div className="text-sm text-gray-600">Velocity Leads</div>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <div className="flex items-center">
-              <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                <div className="w-6 h-6 border-2 border-purple-600 rounded-md"></div>
-              </div>
-              <div className="ml-4">
-                <div className="text-2xl font-bold text-primary-900">
-                  {inquiries.filter(i => i.interestType === 'Depth').length}
-                </div>
-                <div className="text-sm text-gray-600">Depth Leads</div>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <div className="flex items-center">
-              <div className="w-12 h-12 bg-accent-100 rounded-lg flex items-center justify-center">
-                <div className="w-6 h-6 border-2 border-accent-600 rounded-lg"></div>
-              </div>
-              <div className="ml-4">
-                <div className="text-2xl font-bold text-primary-900">
-                  {inquiries.filter(i => i.interestType === 'Group').length}
-                </div>
-                <div className="text-sm text-gray-600">Group Leads</div>
-              </div>
-            </div>
+                <h3 className="font-bold text-[#2C3E50] text-sm group-hover:text-[#C49A6C] transition-colors">{mod.title}</h3>
+                <p className="text-xs text-gray-500 mt-1">{mod.desc}</p>
+              </Link>
+            ))}
           </div>
         </div>
 
-        {/* Navigation Cards */}
-        <div className="grid md:grid-cols-3 gap-6">
-          <Link href="/admin/pipeline" className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
-            <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 bg-primary-900 rounded-lg flex items-center justify-center">
-                <div className="w-6 h-6 border-2 border-white rounded-sm relative">
-                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-white rounded-full"></div>
+        {/* Quick Actions */}
+        <div className="grid md:grid-cols-3 gap-4">
+          <div className="bg-[#2C3E50] text-white rounded-xl p-6">
+            <h3 className="font-bold text-[#C49A6C] mb-2">🚀 Quick Actions</h3>
+            <div className="space-y-2">
+              <Link href="/consult" className="block text-sm text-gray-300 hover:text-white transition-colors">→ View Consult Form</Link>
+              <Link href="/book" className="block text-sm text-gray-300 hover:text-white transition-colors">→ Open Booking Page</Link>
+              <Link href="/admin/content-tool" className="block text-sm text-gray-300 hover:text-white transition-colors">→ Generate This Week's Posts</Link>
+              <Link href="/admin/pipeline" className="block text-sm text-gray-300 hover:text-white transition-colors">→ Review Pipeline</Link>
+            </div>
+          </div>
+          <div className="bg-white rounded-xl border border-gray-100 p-6">
+            <h3 className="font-bold text-[#2C3E50] mb-2">📋 Pre-Launch Checklist</h3>
+            <div className="space-y-2">
+              {[
+                { item: 'QR codes tested on iPhone & Android', done: false },
+                { item: 'Supabase test lead submitted', done: false },
+                { item: 'Zapier email fires within 60 sec', done: false },
+                { item: 'GA4 tracking confirmed active', done: false },
+                { item: 'Ethos co-branded link configured', done: false },
+              ].map((check, i) => (
+                <div key={i} className="flex items-center gap-2 text-sm text-gray-700">
+                  <span className={`w-4 h-4 rounded border-2 flex-shrink-0 ${check.done ? 'bg-green-500 border-green-500' : 'border-gray-300'}`}></span>
+                  {check.item}
                 </div>
-              </div>
-              <div>
-                <h3 className="font-semibold text-primary-900">Pipeline Management</h3>
-                <p className="text-sm text-gray-600">Drag-and-drop Kanban board for lead management</p>
-              </div>
+              ))}
             </div>
-          </Link>
-
-          <Link href="/admin/social" className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
-            <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 bg-accent-500 rounded-lg flex items-center justify-center">
-                <div className="w-6 h-6 border-2 border-white rounded-circle"></div>
-              </div>
-              <div>
-                <h3 className="font-semibold text-primary-900">Social Content Workflow</h3>
-                <p className="text-sm text-gray-600">AI-powered social media content generation</p>
-              </div>
+          </div>
+          <div className="bg-white rounded-xl border border-gray-100 p-6">
+            <h3 className="font-bold text-[#2C3E50] mb-2">📊 Year 1 Progress</h3>
+            <div className="space-y-3">
+              {[
+                { label: 'Revenue Target', current: '$0', goal: '$98,000', pct: 0 },
+                { label: 'Leads', current: inquiries.length.toString(), goal: '187', pct: Math.min(100, (inquiries.length / 187) * 100) },
+                { label: 'Clients Closed', current: '0', goal: '44', pct: 0 },
+              ].map(item => (
+                <div key={item.label}>
+                  <div className="flex justify-between text-xs text-gray-600 mb-1">
+                    <span>{item.label}</span>
+                    <span>{item.current} / {item.goal}</span>
+                  </div>
+                  <div className="w-full bg-gray-100 rounded-full h-2">
+                    <div className="bg-[#C49A6C] h-2 rounded-full transition-all" style={{ width: `${item.pct}%` }}></div>
+                  </div>
+                </div>
+              ))}
             </div>
-          </Link>
-
-          <Link href="/admin/analytics" className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
-            <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center">
-                <div className="w-6 h-6 border-2 border-white rounded-md"></div>
-              </div>
-              <div>
-                <h3 className="font-semibold text-primary-900">Analytics Dashboard</h3>
-                <p className="text-sm text-gray-600">Lead attribution and conversion tracking</p>
-              </div>
-            </div>
-          </Link>
+          </div>
         </div>
 
         {/* Recent Inquiries */}
-        <div className="bg-white rounded-lg shadow-md">
-          <div className="p-6 border-b border-gray-200">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-semibold text-primary-900">Recent Inquiries</h2>
-              <Link href="/admin/pipeline" className="text-primary-600 hover:text-primary-800 text-sm font-medium">
-                View All →
-              </Link>
-            </div>
+        <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+          <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+            <h2 className="text-lg font-bold text-[#2C3E50]">Recent Inquiries</h2>
+            <Link href="/admin/pipeline" className="text-sm text-[#C49A6C] hover:underline font-semibold">View Pipeline →</Link>
           </div>
-
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full text-sm">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Contact
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Interest Type
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    County
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Received
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
+                  {['Contact', 'Interest', 'County', 'Received', 'Status'].map(h => (
+                    <th key={h} className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">{h}</th>
+                  ))}
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="divide-y divide-gray-100">
                 {inquiries.slice(0, 10).map((inquiry) => (
-                  <tr key={inquiry.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div>
-                        <div className="text-sm font-medium text-gray-900">
-                          {inquiry.contact.firstName} {inquiry.contact.lastName}
-                        </div>
-                        <div className="text-sm text-gray-500">{inquiry.contact.email}</div>
-                        {inquiry.contact.phone && (
-                          <div className="text-sm text-gray-500">{inquiry.contact.phone}</div>
-                        )}
-                      </div>
+                  <tr key={inquiry.id} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-6 py-4">
+                      <div className="font-semibold text-[#2C3E50]">{inquiry.contact.firstName} {inquiry.contact.lastName}</div>
+                      <div className="text-gray-500 text-xs">{inquiry.contact.email}</div>
+                      {inquiry.contact.phone && <div className="text-gray-400 text-xs">{inquiry.contact.phone}</div>}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-6 py-4">
                       <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                         inquiry.interestType === 'Velocity' ? 'bg-blue-100 text-blue-800' :
                         inquiry.interestType === 'Depth' ? 'bg-purple-100 text-purple-800' :
                         'bg-green-100 text-green-800'
-                      }`}>
-                        {inquiry.interestType}
-                      </span>
+                      }`}>{inquiry.interestType}</span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {inquiry.contact.county || '-'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {new Date(inquiry.createdAt).toLocaleDateString()}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-6 py-4 text-gray-700">{inquiry.contact.county || '—'}</td>
+                    <td className="px-6 py-4 text-gray-500">{new Date(inquiry.createdAt).toLocaleDateString()}</td>
+                    <td className="px-6 py-4">
                       <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
                         {inquiry.status.replace('_', ' ')}
                       </span>
@@ -235,17 +215,15 @@ export default function AdminDashboard() {
               </tbody>
             </table>
           </div>
-
           {inquiries.length === 0 && (
             <div className="p-12 text-center">
-              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <div className="w-8 h-8 border-2 border-gray-400 rounded-sm"></div>
-              </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No inquiries yet</h3>
-              <p className="text-gray-500">New leads will appear here when they submit the consultation form.</p>
+              <div className="text-4xl mb-3">📭</div>
+              <h3 className="text-lg font-semibold text-gray-700 mb-1">No inquiries yet</h3>
+              <p className="text-gray-500 text-sm">New leads will appear here when they submit the consultation form.</p>
             </div>
           )}
         </div>
+
       </div>
     </main>
   )

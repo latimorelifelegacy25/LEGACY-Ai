@@ -271,6 +271,13 @@ function formatCurrency(value: number) {
   }).format(value);
 }
 
+function getFileNameFromDisposition(disposition: string | null) {
+  if (!disposition) return "";
+
+  const match = disposition.match(/filename="([^"]+)"/);
+  return match?.[1] || "";
+}
+
 function getRule72Result(rule72: Rule72State) {
   const amount = Number(rule72.startingAmount);
   const rate = Number(rule72.estimatedRate);
@@ -296,6 +303,7 @@ export default function EducationPage() {
   const [data, setData] = useState<FunnelData>(initialData);
   const [leadId, setLeadId] = useState<string | null>(null);
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const viewedEventsRef = useRef<Set<string>>(new Set());
   const completedRef = useRef(false);
@@ -305,13 +313,17 @@ export default function EducationPage() {
   const score = useMemo(() => calculateScore(data), [data]);
   const rule72Result = useMemo(() => getRule72Result(data.rule72), [data.rule72]);
 
-  async function logActivity(activityType: string, activityDetail?: string) {
+  async function logActivity(
+    activityType: string,
+    activityDetail?: string,
+    targetLeadId = leadId
+  ) {
     await fetch("/api/lead-activity", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       keepalive: true,
       body: JSON.stringify({
-        lead_id: leadId,
+        lead_id: targetLeadId,
         email: data.contact.email,
         activity_type: activityType,
         activity_detail: activityDetail,
@@ -345,6 +357,19 @@ export default function EducationPage() {
     }
 
     return result.lead_id ?? null;
+  }
+
+  async function sendFollowUp(eventType: string, targetLeadId = leadId) {
+    await fetch("/api/email-follow-up", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      keepalive: true,
+      body: JSON.stringify({
+        ...toLeadPayload(data, score, "Qualified"),
+        lead_id: targetLeadId,
+        event_type: eventType
+      })
+    }).catch(() => null);
   }
 
   function validateStep(step: Step) {
@@ -382,6 +407,7 @@ export default function EducationPage() {
 
   async function next() {
     setError("");
+    setNotice("");
 
     const validationError = validateStep(currentStep);
 
@@ -399,7 +425,7 @@ export default function EducationPage() {
         setIsSubmitting(true);
         const id = await saveLead("New Lead");
         setLeadId(id);
-        await logActivity("Completed Contact Capture");
+        await logActivity("Completed Contact Capture", undefined, id);
       }
 
       if (currentStep === "priority") {
@@ -432,6 +458,7 @@ export default function EducationPage() {
 
   function back() {
     setError("");
+    setNotice("");
     const previousStep = steps[stepIndex - 1];
 
     if (previousStep) {
@@ -440,29 +467,58 @@ export default function EducationPage() {
   }
 
   async function downloadGuide() {
-    await logActivity("Requested Education Guide", data.priorityPath);
-    await logActivity("Downloaded Guide", data.priorityPath);
+    setError("");
+    setNotice("");
+    setIsSubmitting(true);
 
-    const response = await fetch("/api/education-guide", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(toLeadPayload(data, score, "Qualified"))
-    });
+    try {
+      const savedLeadId = await saveLead("Qualified");
+      await logActivity("Requested Education Guide", data.priorityPath, savedLeadId);
 
-    const blob = await response.blob();
-    const url = URL.createObjectURL(blob);
-    const anchor = document.createElement("a");
+      const response = await fetch("/api/education-guide", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...toLeadPayload(data, score, "Qualified"),
+          lead_id: savedLeadId
+        })
+      });
 
-    anchor.href = url;
-    anchor.download = "latimore-legacy-guide.txt";
-    anchor.click();
+      if (!response.ok) {
+        const result = await response.json().catch(() => null);
+        throw new Error(result?.error || "Unable to generate guide.");
+      }
 
-    URL.revokeObjectURL(url);
+      const emailStatus = response.headers.get("X-Email-Status");
+      const fileName = getFileNameFromDisposition(response.headers.get("Content-Disposition"));
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+
+      anchor.href = url;
+      anchor.download = fileName || "latimore-legacy-guide.pdf";
+      anchor.click();
+
+      URL.revokeObjectURL(url);
+
+      await logActivity("Downloaded Guide", data.priorityPath, savedLeadId);
+
+      if (emailStatus === "sent") {
+        await logActivity("Emailed Guide", data.contact.email, savedLeadId);
+        setNotice("Your branded PDF guide was downloaded and emailed.");
+      } else {
+        setNotice("Your branded PDF guide was downloaded. Add Resend settings to email it automatically.");
+      }
+    } catch (downloadError) {
+      setError(downloadError instanceof Error ? downloadError.message : "Unable to download guide.");
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   async function bookCall() {
-    await saveLead("Booked").catch(() => null);
-    await logActivity("Clicked Book With Jackson", bookingUrl);
+    const savedLeadId = await saveLead("Booked").catch(() => leadId);
+    await logActivity("Clicked Book With Jackson", bookingUrl, savedLeadId);
     window.location.href = bookingUrl;
   }
 
@@ -487,7 +543,10 @@ export default function EducationPage() {
     completedRef.current = true;
 
     saveLead("Qualified")
-      .then(() => logActivity("Completed Legacy Checkup", `Legacy score: ${score}`))
+      .then(async (savedLeadId) => {
+        await logActivity("Completed Legacy Checkup", `Legacy score: ${score}`, savedLeadId);
+        await sendFollowUp("Completed Legacy Checkup", savedLeadId);
+      })
       .catch(() => null);
   }, [currentStep, score]);
 
@@ -803,15 +862,17 @@ export default function EducationPage() {
                 <div className="mt-8 grid gap-3 md:grid-cols-2">
                   <button
                     onClick={bookCall}
-                    className="rounded-2xl bg-[#C49A6C] px-6 py-4 text-lg font-bold text-white transition hover:opacity-90"
+                    disabled={isSubmitting}
+                    className="rounded-2xl bg-[#C49A6C] px-6 py-4 text-lg font-bold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     Book 30 Minutes With Jackson
                   </button>
                   <button
                     onClick={downloadGuide}
-                    className="rounded-2xl border-2 border-[#C49A6C] px-6 py-4 text-lg font-bold text-[#2C3E50] transition hover:bg-[#C49A6C]/10"
+                    disabled={isSubmitting}
+                    className="rounded-2xl border-2 border-[#C49A6C] px-6 py-4 text-lg font-bold text-[#2C3E50] transition hover:bg-[#C49A6C]/10 disabled:cursor-not-allowed disabled:opacity-60"
                   >
-                    Send My Education Guide
+                    {isSubmitting ? "Preparing Guide..." : "Send My Education Guide"}
                   </button>
                 </div>
 
@@ -824,6 +885,12 @@ export default function EducationPage() {
             {error && (
               <div className="mt-6 rounded-2xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
                 {error}
+              </div>
+            )}
+
+            {notice && (
+              <div className="mt-6 rounded-2xl bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700">
+                {notice}
               </div>
             )}
 
