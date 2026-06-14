@@ -1,0 +1,123 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum InterestType { 
+  Velocity 
+  Depth 
+  Group 
+}
+
+enum InquiryStatus { 
+  New_Inquiry 
+  Qualified 
+  Booked 
+  Closed_Won 
+  Closed_Lost 
+}
+
+enum TaskStatus {
+  Pending
+  In_Progress
+  Completed
+  Cancelled
+}
+
+model Contact {
+  id            String      @id @default(uuid())
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  email         String      @unique
+  firstName     String?
+  lastName      String?
+  phone         String?
+  county        String?
+  leadSessionId String?
+  utmSource     String?
+  utmMedium     String?
+  utmCampaign   String?
+  utmTerm       String?
+  utmContent    String?
+  referrer      String?
+  inquiries     Inquiry[]
+  appointments  Appointment[]
+  events        Event[]
+}
+
+model Inquiry {
+  id            String        @id @default(uuid())
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  contact       Contact       @relation(fields: [contactId], references: [id])
+  contactId     String
+  interestType  InterestType
+  status        InquiryStatus @default(New_Inquiry)
+  notes         String?
+  source        String?
+  leadSessionId String?
+  appointments  Appointment[]
+
+  @@index([status])
+  @@index([interestType])
+}
+
+model Appointment {
+  id         String   @id @default(uuid())
+  createdAt  DateTime @default(now())
+  contact    Contact  @relation(fields: [contactId], references: [id])
+  contactId  String
+  inquiry    Inquiry? @relation(fields: [inquiryId], references: [id])
+  inquiryId  String?
+  gcalId     String?
+  startAt    DateTime?
+  endAt      DateTime?
+  location   String?
+}
+
+model Event {
+  id            String   @id @default(uuid())
+  happenedAt    DateTime @default(now())
+  kind          String
+  leadSessionId String?
+  contact       Contact? @relation(fields: [contactId], references: [id])
+  contactId     String?
+  payload       Json
+
+  @@index([kind])
+}
+
+model Task {
+  id          String     @id @default(uuid())
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  title       String
+  description String?
+  status      TaskStatus @default(Pending)
+  dueDate     DateTime?
+  assignedTo  String?
+  contactId   String?
+  inquiryId   String?
+  priority    String?    @default("medium")
+}
+
+model ContentPiece {
+  id            String   @id @default(uuid())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  title         String
+  content       String
+  contentType   String   // post, video, carousel, etc.
+  platform      String   // Facebook, LinkedIn, etc.
+  audience      String
+  pillar        String   // education, FAQ, authority, etc.
+  status        String   @default("draft")
+  scheduledDate DateTime?
+  publishedDate DateTime?
+  ctaType       String?
+  performance   Json?
+}
