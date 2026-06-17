@@ -26,6 +26,11 @@ export function dateTimeOrEmpty(value: string | null | undefined): TextValue {
 	return value ? Builder.dateTime(value) : [];
 }
 
+/** URL value, or empty if the source value is missing. */
+export function urlOrEmpty(value: string | null | undefined): TextValue {
+	return value ? Builder.url(value) : [];
+}
+
 /** Relation value pointing at a single related record, or empty if the key is missing. */
 export function relationOrEmpty(primaryKey: string | null | undefined): RelationValue {
 	return primaryKey ? [Builder.relation(primaryKey)] : [];

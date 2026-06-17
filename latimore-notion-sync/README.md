@@ -1,43 +1,53 @@
 # Latimore Notion Sync
 
 A [Notion Workers](https://developers.notion.com/workers) project that syncs
-Education Funnel lead data from Supabase (the database behind
-`latimore-legacy-checkup`) into two Notion databases, so the data can be
-viewed as charts and dashboards in Notion.
+lead, event, and booking data from Supabase into Notion databases, so the
+data can be browsed, filtered, and charted in Notion without ever touching
+Supabase or writing SQL directly.
 
 ## What gets synced
 
-| Notion database   | Source table                | Primary key   |
-| ------------------ | ---------------------------- | ------------- |
-| **Education Leads**  | `public.education_leads`   | `Lead ID`     |
-| **Lead Activities**  | `public.lead_activities`   | `Activity ID` |
+| Notion database | Source table    | Primary key  |
+| ---------------- | ---------------- | ------------ |
+| **Leads**         | `public.leads`    | `Lead ID`    |
+| **Events**         | `public.events`   | `Event ID`   |
+| **Bookings**       | `public.bookings`  | `Booking ID` |
 
-Each `Lead Activities` row has a two-way `Lead` relation back to
-`Education Leads` (exposed as an `Activities` rollup on each lead), so you
-can see a lead's full activity history from its Notion page.
+`public.leads`/`events`/`bookings` are the unified schema from
+`supabase-unified/sql/001_unified_schema.sql` (built from
+`SPEC1LatimoreLifeLegacyEducationFunnelSystemFINAL.md`), backfilled from the
+real production data in `latimore-hub-main`'s database
+(`supabase-unified/sql/002_backfill_from_latimore_hub_main.sql`).
 
-Both syncs run on a 15-minute schedule in `mode: "incremental"`, paging
-through Supabase ordered by `(updated_at, id)` / `(created_at, id)` so no
-rows are skipped or duplicated.
+> An earlier version of this project synced `education_leads`/
+> `lead_activities` (from `latimore-legacy-checkup`). Those tables were
+> designed but never deployed to the live database, so they held no real
+> data — production leads have always landed in the Prisma-backed tables
+> instead. This version points at the schema that actually has data.
+
+Both `Events` and `Bookings` have a two-way `Lead` relation back to `Leads`
+(exposed as `Events`/`Bookings` rollups on each lead page), so you can see a
+lead's full activity and booking history from its Notion page.
+
+All three syncs run on a 15-minute schedule in `mode: "incremental"`,
+paging through Supabase ordered by `(updated_at, id)` or `(created_at, id)`
+so no rows are skipped or duplicated.
 
 ### Chartable fields
 
 Once synced, build Notion board/chart/timeline views grouped or filtered by:
 
-- **Education Leads**: `Priority Path`, `Lead Status`, `Lead Source`,
-  `Income Stability`, `Retirement Status`, `Life Insurance Status`,
-  `DIME Coverage`, `Living Benefits Interest`, `Estate Planning Interest`,
-  `Family Dependents`, `Mortgage or Debt`, `Legacy Score` (number),
-  `Created At` / `Last Activity` (date).
-- **Lead Activities**: `Type` (activity type), `Logged At` (date), `Lead`
-  (relation, for per-lead activity counts).
+- **Leads**: `Funnel`, `Lead Status`, `Preferred Contact Method`,
+  `Lead Score` (number), `UTM Source`/`UTM Medium`/`UTM Campaign`,
+  `Created At`/`Updated At` (date). `Legacy Source` shows which leads were
+  backfilled from `latimore-hub-main` vs. captured natively going forward.
+- **Events**: `Event Name`, `Funnel`, `Lead` (relation, for per-lead event
+  counts), `Logged At` (date).
+- **Bookings**: `Status`, `Scheduled Start` (date), `Lead` (relation).
 
-Notion's chart database views (bar, line, donut) can group by any of the
-select / multi-select / number / date properties above.
-
-> Select properties are seeded with the known option set from the
-> education funnel. If new values appear upstream (e.g. a new `activity_type`
-> from `/api/event`), Notion adds them as new options automatically.
+> Select properties are seeded with the known option set from the unified
+> schema. If new values appear upstream, Notion adds them as new options
+> automatically.
 
 ## Setup
 
@@ -73,9 +83,8 @@ select / multi-select / number / date properties above.
    ntn workers deploy
    ```
 
-On first deploy, Notion creates the **Education Leads** and **Lead
-Activities** databases in your workspace. Subsequent deploys migrate the
-schema in place.
+On first deploy, Notion creates the **Leads**, **Events**, and **Bookings**
+databases in your workspace. Subsequent deploys migrate the schema in place.
 
 ## Operating
 
@@ -84,15 +93,17 @@ schema in place.
 ntn workers sync status
 
 # Run a sync immediately (e.g. after first deploy)
-ntn workers sync trigger educationLeadsSync
-ntn workers sync trigger leadActivitiesSync
+ntn workers sync trigger leadsSync
+ntn workers sync trigger eventsSync
+ntn workers sync trigger bookingsSync
 
 # Preview changes without writing to Notion
-ntn workers sync trigger educationLeadsSync --preview
+ntn workers sync trigger leadsSync --preview
 
 # Re-sync everything from scratch
-ntn workers sync state reset educationLeadsSync
-ntn workers sync state reset leadActivitiesSync
+ntn workers sync state reset leadsSync
+ntn workers sync state reset eventsSync
+ntn workers sync state reset bookingsSync
 ```
 
 ## Building charts in Notion
@@ -100,11 +111,11 @@ ntn workers sync state reset leadActivitiesSync
 The Workers SDK only syncs the underlying data — charts are built in
 Notion's UI on top of the synced databases:
 
-1. Open the **Education Leads** database.
+1. Open the **Leads** database.
 2. Add a new view → **Chart**.
 3. Pick a chart type (bar, donut, line) and group by a field such as
-   `Priority Path` or `Lead Status` to see lead distribution.
-4. Use `Legacy Score` with a number aggregation (average/sum) for score
+   `Funnel` or `Lead Status` to see lead distribution.
+4. Use `Lead Score` with a number aggregation (average/sum) for score
    trends, or `Created At` on a timeline/line chart for leads over time.
-5. Repeat for **Lead Activities**, grouping by `Type` or `Logged At` to see
-   funnel engagement over time.
+5. Repeat for **Events**, grouping by `Event Name` or `Logged At` to see
+   funnel engagement over time, and **Bookings**, grouping by `Status`.
