@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseAdmin } from "@/lib/supabase-admin";
+import { upsertUnifiedLead } from "@/lib/unified-sync";
 
 type LeadBody = {
   first_name?: string;
@@ -66,6 +67,12 @@ export async function POST(request: NextRequest) {
       ? cleanText(body.lead_status)
       : "New Lead";
 
+    const priorityPath = cleanText(body.priority_path) || null;
+    const legacyScore =
+      typeof body.legacy_score === "number"
+        ? Math.max(0, Math.min(100, Math.round(body.legacy_score)))
+        : null;
+
     const supabase = createSupabaseAdmin();
 
     const { data, error } = await supabase
@@ -78,7 +85,7 @@ export async function POST(request: NextRequest) {
           phone,
           state,
           county,
-          priority_path: cleanText(body.priority_path) || null,
+          priority_path: priorityPath,
           family_dependents: cleanStringArray(body.family_dependents),
           income_stability: cleanText(body.income_stability) || null,
           mortgage_or_debt: cleanStringArray(body.mortgage_or_debt),
@@ -87,10 +94,7 @@ export async function POST(request: NextRequest) {
           dime_coverage: cleanText(body.dime_coverage) || null,
           living_benefits_interest: cleanText(body.living_benefits_interest) || null,
           estate_planning_interest: cleanText(body.estate_planning_interest) || null,
-          legacy_score:
-            typeof body.legacy_score === "number"
-              ? Math.max(0, Math.min(100, Math.round(body.legacy_score)))
-              : null,
+          legacy_score: legacyScore,
           lead_source: "Education Funnel",
           lead_status: leadStatus,
           updated_at: now,
@@ -104,6 +108,17 @@ export async function POST(request: NextRequest) {
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
+
+    await upsertUnifiedLead({
+      legacyLeadId: data.id,
+      firstName,
+      lastName,
+      email,
+      phone,
+      priorityPath,
+      legacyScore,
+      leadStatus
+    });
 
     return NextResponse.json({ lead_id: data.id });
   } catch (error) {

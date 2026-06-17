@@ -1,6 +1,7 @@
 import crypto from 'crypto'
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { syncInquiryToUnifiedSchema } from '@/lib/unified-sync'
 
 function verifyFilloutSignature(rawBody: string, signature: string | null) {
   if (!signature) return false
@@ -55,14 +56,24 @@ export async function POST(req: NextRequest) {
     }
   })
 
+  const interestType = (f.interest_type ?? 'Velocity') as string
+
   const inquiry = await prisma.inquiry.create({
     data: {
       contactId: contact.id,
-      interestType: (f.interest_type ?? 'Velocity') as any,
+      interestType: interestType as any,
       status: 'New_Inquiry',
       source: 'Fillout',
       leadSessionId: f.lead_session_id
     }
+  })
+
+  await syncInquiryToUnifiedSchema({
+    inquiryId: inquiry.id,
+    contact,
+    interestType,
+    status: 'New_Inquiry',
+    source: 'Fillout'
   })
 
   return NextResponse.json({ ok: true, inquiryId: inquiry.id })
