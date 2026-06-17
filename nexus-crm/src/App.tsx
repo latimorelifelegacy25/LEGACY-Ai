@@ -158,7 +158,7 @@ function Login() {
     } catch (err: any) {
       console.error("Google login failed inside iframe:", err);
       setError(
-        "Google Sign-In was blocked, cancelled, or not authorized for this domain. Use 'Sign In with Local Admin' to enter the CRM now, then fix Firebase authorized domains when ready."
+        "Google Sign-In was blocked, cancelled, or not authorized for this domain. Use 'Sign In with Local Admin' to enter the CRM now, then add this domain to the Google OAuth client's authorized origins when ready."
       );
     } finally {
       setLoading(false);
@@ -220,7 +220,7 @@ function Login() {
         </div>
         
         <p className="text-center text-xs text-gray-500 leading-normal">
-          By continuing, you agree to our Terms of Service and Privacy Policy. Local admin mode keeps the CRM usable even when Firebase or Google OAuth is not configured yet.
+          By continuing, you agree to our Terms of Service and Privacy Policy. Local admin mode keeps the CRM usable even when Google OAuth is not configured yet.
         </p>
 
         <div className="pt-4 border-t border-white/5">
@@ -234,44 +234,34 @@ function Login() {
           {showConfig && (
             <div className="mt-4 p-4 bg-black/40 border border-white/5 rounded-2xl space-y-3 text-[11px] text-gray-300 font-mono leading-relaxed text-left">
               <div className="space-y-1">
-                <span className="text-[#C49A6C] font-bold uppercase tracking-wider text-[9px]">Authorized Redirect URI:</span>
-                <input 
-                  type="text" 
-                  readOnly 
-                  value="https://composed-amulet-479803-p9.firebaseapp.com/__/auth/handler" 
-                  onClick={(e) => (e.target as HTMLInputElement).select()}
-                  className="w-full bg-white/5 border border-white/10 rounded-md p-1.5 text-[10px] text-[#C49A6C] outline-none select-all"
-                />
-              </div>
-              <div className="space-y-1">
                 <span className="text-[#C49A6C] font-bold uppercase tracking-wider text-[9px]">Authorized JS Origins:</span>
-                <input 
-                  type="text" 
-                  readOnly 
-                  value="https://composed-amulet-479803-p9.firebaseapp.com" 
+                <input
+                  type="text"
+                  readOnly
+                  value="https://composed-amulet-479803-p9.firebaseapp.com"
                   onClick={(e) => (e.target as HTMLInputElement).select()}
                   className="w-full bg-white/5 border border-white/10 rounded-md p-1.5 text-[10px] text-[#C49A6C] outline-none select-all"
                 />
               </div>
               <div className="space-y-1">
                 <span className="text-[#C49A6C] font-bold uppercase tracking-wider text-[9px]">App iFrame Host Origins:</span>
-                <input 
-                  type="text" 
-                  readOnly 
-                  value="https://ais-dev-3uhvflfdf25u7bjng6hag6-27160861664.us-east5.run.app" 
+                <input
+                  type="text"
+                  readOnly
+                  value="https://ais-dev-3uhvflfdf25u7bjng6hag6-27160861664.us-east5.run.app"
                   onClick={(e) => (e.target as HTMLInputElement).select()}
                   className="w-full bg-white/5 border border-white/10 rounded-md p-1.5 text-[10px] text-gray-300 outline-none select-all mb-1"
                 />
-                <input 
-                  type="text" 
-                  readOnly 
-                  value="https://ais-pre-3uhvflfdf25u7bjng6hag6-27160861664.us-east5.run.app" 
+                <input
+                  type="text"
+                  readOnly
+                  value="https://ais-pre-3uhvflfdf25u7bjng6hag6-27160861664.us-east5.run.app"
                   onClick={(e) => (e.target as HTMLInputElement).select()}
                   className="w-full bg-white/5 border border-white/10 rounded-md p-1.5 text-[10px] text-gray-300 outline-none select-all"
                 />
               </div>
               <p className="text-[9px] text-gray-400 capitalize-none leading-normal">
-                Paste these into your Google Cloud APIs & Services Credentials and Firebase Authentication Google provider properties to resolve any redirect or authorization blockage.
+                Paste these into your Google Cloud Console &gt; APIs &amp; Services &gt; Credentials, under the OAuth 2.0 Web client's Authorized JavaScript origins, to resolve any sign-in authorization blockage. No redirect URI is needed — Google Identity Services uses a popup token flow.
               </p>
             </div>
           )}

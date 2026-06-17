@@ -124,3 +124,47 @@ Results:
 - `npm install --package-lock-only` was not needed and was blocked by this environment's package registry mirror while attempting to fetch an optional Tailwind oxide package. Existing `npm ci`, build, lint, and audit passed.
 - Gemini remains bundled through the client-side app. Production hardening should move Gemini calls behind a server-side API route.
 - Supabase production security still needs a final auth model decision: Supabase Auth, server API proxy, or another trusted backend. The included permissive policy file is development-only.
+
+---
+
+Date: 2026-06-17
+Status: fixed_complete for Firebase Auth → Google Identity Services migration.
+
+## D — Firebase Auth Removed, Google Identity Services Direct Integration
+
+1. **Replaced Firebase Authentication with Google Identity Services (GIS)**
+   - Root app: deleted `src/lib/firebase.ts` (Firebase Auth wrapper) and added `src/lib/googleAuth.ts`, a drop-in replacement using `google.accounts.oauth2.initTokenClient()` token-flow sign-in. Same exported API (`initAuth`, `googleSignIn`, `getAccessToken`, `logout`) so `App.tsx` only needed an import swap and a type rename (`FirebaseUser` → `GoogleUser`).
+   - Removed the unused `firebase` dependency and root-level `firebase-applet-config.json` (the root app no longer uses Firestore or any other Firebase service).
+   - Nexus CRM: rewrote `src/firebase.ts` to drop `firebase/auth` while keeping `firebase/app` + `firebase/firestore` initialization intact, since Firestore is a real, actively used `VITE_DATA_PROVIDER="firebase"` option in `dbService.ts`. The exported API (`auth`, `onAuthChange`, `signIn`, `signInAsGuest`, `getAccessToken`, `setAccessToken`, `getAuthProviderMode`, `logOut`, `AuthUser`) is unchanged, so no consumer files besides `App.tsx`/`Dashboard.tsx` text needed updates.
+   - `signInAsGuest()` in Nexus CRM now always creates the Local Admin session (GIS has no anonymous-auth equivalent to Firebase's `signInAnonymously`).
+   - Updated user-facing copy in both apps' login screens and the Nexus CRM dashboard backend-status pill to reference Google Identity Services / Google OAuth / "Firestore Cloud Active" instead of Firebase Auth wording. Removed the now-unnecessary "Authorized Redirect URI" field from the Nexus CRM debug panel, since GIS uses a popup token flow with no redirect URI.
+   - Added `VITE_GOOGLE_CLIENT_ID` to both apps' `.env.example` files.
+
+2. **Removed unused `express`/`@types/express` dependency from Nexus CRM**
+   - Confirmed via repo-wide search that neither package is imported anywhere in `nexus-crm/src` (there is no server entry point in this app).
+   - Their transitive sub-dependencies (`type-is@1.6.18`, `raw-body@2.5.3`) were being blocked by this environment's package registry mirror, preventing `npm install` from completing. Removing the dead dependency was the correct fix rather than working around the registry.
+
+## D — Verification
+
+Executed successfully (root app and Nexus CRM):
+
+```bash
+npm install
+npm run lint   # tsc --noEmit, scoped to nexus-crm
+npm run build  # vite build (both apps)
+npm audit --omit=dev
+```
+
+Results:
+
+- Nexus CRM clean install: pass (after removing unused `express`)
+- Nexus CRM TypeScript (`tsc --noEmit`): pass, 0 errors
+- Nexus CRM production build: pass
+- Root app production build (`vite build` + esbuild server bundle): pass
+- `npm audit --omit=dev`: 4 pre-existing high-severity advisories in both apps (`esbuild`/`vite` dev-server CVEs, `protobufjs`, `ws`), all transitive dependencies of `vite` and `@google/genai`, unrelated to this auth migration and not newly introduced by it.
+
+## Remaining Non-Blocking Items
+
+- Root-level `tsc --noEmit` (run from the monorepo root without scoping) surfaces unrelated pre-existing errors in sibling apps (`latimore-hub`, `latimore-legacy-checkup`, `latimore-notion-sync`) that have never had their own dependencies installed in this environment; these are unrelated to the Nexus CRM/root app auth migration.
+- Real-world Google sign-in (popup flow, consent screen, token refresh) has not been exercised against a live `VITE_GOOGLE_CLIENT_ID` in this sandbox; verification here is limited to type-checking and production builds.
+- The pre-existing `esbuild`/`vite`/`protobufjs`/`ws` advisories from `npm audit` are unrelated to this change and were not remediated as part of this migration.

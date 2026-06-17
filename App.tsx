@@ -41,9 +41,8 @@ import {
   Video
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { initAuth, googleSignIn, logout, getAccessToken } from './src/lib/firebase';
+import { initAuth, googleSignIn, logout, getAccessToken, type GoogleUser } from './src/lib/googleAuth';
 import { listDriveFiles, DriveFile } from './src/lib/services/driveService';
-import { User as FirebaseUser } from 'firebase/auth';
 
 import { Copilot } from './src/components/Copilot';
 import { chatWithCopilot } from './src/lib/services/geminiService';
@@ -90,7 +89,7 @@ const COMMON_COMMANDS = ['ls', 'cd', 'mkdir', 'cat', 'echo', 'pwd', 'alias', 'un
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>('dashboard');
-  const [user, setUser] = useState<FirebaseUser | null>(null);
+  const [user, setUser] = useState<GoogleUser | null>(null);
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [driveFiles, setDriveFiles] = useState<DriveFile[]>([]);
   const [driveLoading, setDriveLoading] = useState(false);

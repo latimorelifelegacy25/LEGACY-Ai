@@ -1,6 +1,6 @@
 # Nexus CRM — Latimore Repair Build
 
-This patched build keeps the CRM operational even when Firebase Google OAuth, anonymous auth, or Firestore rules are not fully configured.
+This patched build keeps the CRM operational even when Google OAuth (via Google Identity Services) or Firestore rules are not fully configured.
 
 ## Fast local run in Termux
 
@@ -41,14 +41,15 @@ VITE_SUPABASE_URL="https://YOUR-PROJECT.supabase.co"
 VITE_SUPABASE_ANON_KEY="YOUR_SUPABASE_ANON_KEY"
 ```
 
-### Firebase-backed CRM
+### Google-auth-backed CRM (Firestore data)
 
 ```bash
 VITE_AUTH_PROVIDER="firebase"
 VITE_DATA_PROVIDER="firebase"
+VITE_GOOGLE_CLIENT_ID="YOUR_GOOGLE_OAUTH_CLIENT_ID"
 ```
 
-Make sure Firebase Authentication has Google and/or Anonymous sign-in enabled, and add your deployed domain to Firebase Authentication authorized domains.
+Sign-in uses Google Identity Services directly (no Firebase Auth dependency). Create an OAuth 2.0 Web client ID in Google Cloud Console under APIs & Services > Credentials, and add your deployed domain to that client's Authorized JavaScript origins. Firestore is still used for data storage and configured separately via `firebase-applet-config.json`.
 
 ## Verification
 

@@ -333,7 +333,7 @@ export default function Dashboard() {
           )}
         >
           <Database size={16} className={cn("transition-transform group-hover:scale-110", provider === 'supabase' ? "text-emerald-500" : provider === 'local' ? "text-amber-500" : "text-blue-500")} />
-          <span>Backend: {provider === 'supabase' ? 'Supabase Cloud Active' : provider === 'local' ? 'Local Repair Mode Active' : 'Firebase Sandbox Active'}</span>
+          <span>Backend: {provider === 'supabase' ? 'Supabase Cloud Active' : provider === 'local' ? 'Local Repair Mode Active' : 'Firestore Cloud Active'}</span>
           <Settings size={14} className="opacity-60 group-hover:opacity-100 group-hover:rotate-45 transition-all text-gray-500 ml-1" />
         </button>
       </div>
