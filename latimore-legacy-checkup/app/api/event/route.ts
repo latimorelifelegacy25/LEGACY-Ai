@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseAdmin } from "@/lib/supabase-admin";
+import { logUnifiedEvent } from "@/lib/unified-sync";
 
 type EventPayload = {
   lead_id?: unknown;
@@ -85,13 +86,17 @@ export async function POST(request: NextRequest) {
 
     const supabase = createSupabaseAdmin();
 
-    const { error } = await supabase.from("lead_activities").insert({
-      lead_id: leadId || null,
-      email: email || null,
-      activity_type: activityType,
-      activity_detail: activityDetail,
-      page_path: pagePath
-    });
+    const { data: activityRow, error } = await supabase
+      .from("lead_activities")
+      .insert({
+        lead_id: leadId || null,
+        email: email || null,
+        activity_type: activityType,
+        activity_detail: activityDetail,
+        page_path: pagePath
+      })
+      .select("id")
+      .single();
 
     if (error) {
       return NextResponse.json(
@@ -106,6 +111,14 @@ export async function POST(request: NextRequest) {
         .update({ last_activity: new Date().toISOString() })
         .eq("id", leadId);
     }
+
+    await logUnifiedEvent({
+      legacyLeadId: leadId || null,
+      email: email || null,
+      eventName: activityType,
+      pageUrl: pagePath,
+      legacyActivityId: activityRow.id
+    });
 
     return NextResponse.json({ ok: true });
   } catch (error) {

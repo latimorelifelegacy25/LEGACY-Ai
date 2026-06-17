@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { syncInquiryToUnifiedSchema } from '@/lib/unified-sync'
 
 export async function GET(req: NextRequest) {
   try {
@@ -56,6 +57,14 @@ export async function POST(req: NextRequest) {
       include: {
         contact: true
       }
+    })
+
+    await syncInquiryToUnifiedSchema({
+      inquiryId: inquiry.id,
+      contact: inquiry.contact,
+      interestType,
+      status: 'New_Inquiry',
+      source: source || 'Manual'
     })
 
     return NextResponse.json({ ok: true, inquiry })
