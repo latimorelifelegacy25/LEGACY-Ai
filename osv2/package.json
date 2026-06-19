@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && next build",
+    "build": "next build",
     "start": "next start",
     "lint": "next lint",
     "preflight": "node scripts/preflight.mjs",
@@ -13,7 +13,9 @@
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:push": "prisma db push",
-    "db:studio": "prisma studio"
+    "db:studio": "prisma studio",
+    "build:strict": "prisma generate && next build",
+    "postinstall": "prisma generate || node -e \"console.warn('Prisma generate skipped; run npm run db:generate after DATABASE_URL is configured.')\""
   },
   "dependencies": {
     "@prisma/client": "^5.14.0",

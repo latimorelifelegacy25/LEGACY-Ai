@@ -11,9 +11,9 @@ const recommended = [
   'UPSTASH_REDIS_REST_URL',
   'UPSTASH_REDIS_REST_TOKEN',
   'QSTASH_TOKEN',
-  'STORAGE_ENDPOINT',
-  'STORAGE_ACCESS_KEY_ID',
-  'STORAGE_SECRET_ACCESS_KEY',
+  'OBJECT_STORAGE_ENDPOINT',
+  'OBJECT_STORAGE_ACCESS_KEY',
+  'OBJECT_STORAGE_SECRET_KEY',
 ];
 
 const missingRequired = required.filter((key) => !process.env[key]);

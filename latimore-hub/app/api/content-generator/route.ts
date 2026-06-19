@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 import { NextRequest, NextResponse } from 'next/server'
 
 const COMPLIANCE_FOOTER = 'Jackson M. Latimore Sr., Independent Insurance Consultant, PA License #1268820 | NIPR #21638507. Educational content only.'

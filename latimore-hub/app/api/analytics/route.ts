@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
@@ -108,15 +110,15 @@ export async function GET(req: NextRequest) {
     const analyticsData = {
       totalInquiries,
       conversionRate,
-      topSources: topSources.map(s => ({
+      topSources: topSources.map((s: any) => ({
         source: s.source || 'Direct',
         count: s._count.source
       })),
-      inquiriesByType: inquiriesByType.map(t => ({
+      inquiriesByType: inquiriesByType.map((t: any) => ({
         type: t.interestType,
         count: t._count.interestType
       })),
-      inquiriesByCounty: inquiriesByCounty.map(c => ({
+      inquiriesByCounty: inquiriesByCounty.map((c: any) => ({
         county: c.county || 'Unknown',
         count: c._count.county
       })),

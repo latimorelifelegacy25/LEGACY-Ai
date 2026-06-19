@@ -1,8 +1,5 @@
 import './globals.css'
-import { Inter } from 'next/font/google'
 import { Metadata } from 'next'
-
-const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
   title: 'Latimore Life & Legacy LLC - Protecting Today. Securing Tomorrow.',
@@ -22,25 +19,31 @@ export default function RootLayout({
 }: {
   children: React.ReactNode
 }) {
+  const ga4Id = process.env.NEXT_PUBLIC_GA4_ID || process.env.GA4_ID
+
   return (
     <html lang="en">
       <head>
-        <script
-          async
-          src={`https://www.googletagmanager.com/gtag/js?id=${process.env.GA4_ID}`}
-        />
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              window.dataLayer = window.dataLayer || [];
-              function gtag(){dataLayer.push(arguments);}
-              gtag('js', new Date());
-              gtag('config', '${process.env.GA4_ID}');
-            `,
-          }}
-        />
+        {ga4Id ? (
+          <>
+            <script
+              async
+              src={`https://www.googletagmanager.com/gtag/js?id=${ga4Id}`}
+            />
+            <script
+              dangerouslySetInnerHTML={{
+                __html: `
+                  window.dataLayer = window.dataLayer || [];
+                  function gtag(){dataLayer.push(arguments);}
+                  gtag('js', new Date());
+                  gtag('config', '${ga4Id}');
+                `,
+              }}
+            />
+          </>
+        ) : null}
       </head>
-      <body className={inter.className}>
+      <body>
         {children}
       </body>
     </html>

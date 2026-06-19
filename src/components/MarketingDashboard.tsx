@@ -158,10 +158,10 @@ export const MarketingDashboard: React.FC = () => {
 
   // State arrays for Scheduling & Comments
   const [posts, setPosts] = useState<SocialPost[]>([
-    { id: 'p1', platform: 'facebook', caption: 'Protecting Today. Securing Tomorrow. We’re proud to sponsor the upcoming Pottsvilles Area High School legacy program. #TheBeatGoesOn #SchuylkillCounty', status: 'approved', scheduledAt: '2026-05-24 10:00 AM', approvedBy: 'Patrick Latimore' },
+    { id: 'p1', platform: 'facebook', caption: 'Protecting Today. Securing Tomorrow. We’re proud to sponsor the upcoming Pottsvilles Area High School legacy program. #TheBeatGoesOn #SchuylkillCounty', status: 'approved', scheduledAt: '2026-05-24 10:00 AM', approvedBy: 'Jackson Latimore' },
     { id: 'p2', platform: 'linkedin', caption: 'How local business leaders coordinate cross-generational succession plans. Critical takeaways from our discussion with Sam Chivinski. Link in bio.', status: 'scheduled', scheduledAt: '2026-05-25 09:00 AM' },
     { id: 'p3', platform: 'instagram', caption: 'Secure your family legacy with an on-brand policy built by local specialists. 🍂 Family-first, Coal Region matters. #ProtectingToday #TheBeatGoesOn', status: 'draft' },
-    { id: 'p4', platform: 'facebook', caption: 'Luzerne County Latino business assets protection playbook is now live! Transcending barriers with Spanish speaking support. 🇺🇸🇵🇷', status: 'published', publishedAt: '2026-05-18 02:30 PM', approvedBy: 'Patrick Latimore' },
+    { id: 'p4', platform: 'facebook', caption: 'Luzerne County Latino business assets protection playbook is now live! Transcending barriers with Spanish speaking support. 🇺🇸🇵🇷', status: 'published', publishedAt: '2026-05-18 02:30 PM', approvedBy: 'Jackson Latimore' },
     { id: 'p5', platform: 'linkedin', caption: 'Audit Checklist for life and legacy planning - Schuylkill Valley businesses.', status: 'failed', scheduledAt: '2026-05-15 11:15 AM' }
   ]);
 
@@ -177,7 +177,7 @@ export const MarketingDashboard: React.FC = () => {
       leadPotential: 'medium',
       recommendedAction: 'Provide standard Schuylkill valley succession literature.'
     }},
-    { id: 'c3', postId: 'p1', postTitle: 'PAHS Football sponsoring', platform: 'facebook', author: 'Samantha K.', body: 'I lost my brother last year and our school support team was legendary. Heartwarming to see Latimore sponsoring this program. Thank you, Patrick.', createdAt: '2026-05-20 12:15 PM' },
+    { id: 'c3', postId: 'p1', postTitle: 'PAHS Football sponsoring', platform: 'facebook', author: 'Samantha K.', body: 'I lost my brother last year and our school support team was legendary. Heartwarming to see Latimore sponsoring this program. Thank you, Jackson.', createdAt: '2026-05-20 12:15 PM' },
     { id: 'c4', postId: 'p4', postTitle: 'Latino Market Launch', platform: 'facebook', author: 'Ramon V.', body: '¿Ofrecen asesoría en español sobre seguros de vida con ahorro? Interesado para mi negocio familiar.', createdAt: '2026-05-19T10:08:00Z' }
   ]);
 
@@ -339,7 +339,7 @@ export const MarketingDashboard: React.FC = () => {
         const pr = campaignPrompt.toLowerCase();
         let name = "Local Outreach Campaign";
         let sub = "Secure Your Legacy with Latimore life offerings";
-        let body = "Dear Families of Schuylkill County,\n\nWe trust this message finds you well. At Latimore, our motto is 'Protecting Today. Securing Tomorrow.'...\n\nSincerely,\nPatrick Latimore";
+        let body = "Dear Families of Schuylkill County,\n\nWe trust this message finds you well. At Latimore, our motto is 'Protecting Today. Securing Tomorrow.'...\n\nSincerely,\nJackson Latimore";
         let promptVal = "A modern high-contrast editorial concept showing secure families in Schuylkill County, photorealistic style, Inter/Outfit typography";
         let seed = "warm-family";
         let sms = "Latimore Legacy LLC: Secure your family and business succession plans with coal region specialists today. Repl eligibility: latimorelifelegacy.com Stop to optout";
@@ -350,7 +350,7 @@ export const MarketingDashboard: React.FC = () => {
         if (pr.includes('football') || pr.includes('pahs') || pr.includes('sport')) {
           name = "PAHS Football Legacy";
           sub = "⚡ Sponsoring our Pottsville Area High School legacy program!";
-          body = "Dear Pottsville Families,\n\nAt Latimore Hub, we are thrilled to reinforce our commitment to community integration by sponsoring the Pottsville Area High School athletics! #TheBeatGoesOn.\n\nLearn how our custom legacy program supports student athletes both on and off the field.\n\nBest regards,\nPatrick Latimore";
+          body = "Dear Pottsville Families,\n\nAt Latimore Hub, we are thrilled to reinforce our commitment to community integration by sponsoring the Pottsville Area High School athletics! #TheBeatGoesOn.\n\nLearn how our custom legacy program supports student athletes both on and off the field.\n\nBest regards,\nJackson Latimore";
           promptVal = "Pottsville athletic stadium field at sunset with young football players looking at the sunrise, cinematic golden hour light, high contrast";
           seed = "football-action";
           sms = "Pottsville Pride! At Latimore, we support PAHS athletics and legacy planning. Check out our joint sponsor benefits: latimorelifelegacy.com";
@@ -425,7 +425,7 @@ export const MarketingDashboard: React.FC = () => {
         return {
           ...p,
           status: 'approved',
-          approvedBy: 'Patrick Latimore'
+          approvedBy: 'Jackson Latimore'
         };
       }
       return p;
@@ -968,9 +968,9 @@ export const MarketingDashboard: React.FC = () => {
                     <button
                       onClick={() => {
                         setPosts(prev => [
-                          { id: 'bp-fb-' + Date.now(), platform: 'facebook', caption: campaignResult.fbCaption, status: 'published', publishedAt: 'Just Now via Batch Post', approvedBy: 'Patrick Latimore' },
-                          { id: 'bp-ig-' + Date.now(), platform: 'instagram', caption: campaignResult.igCaption, status: 'published', publishedAt: 'Just Now via Batch Post', approvedBy: 'Patrick Latimore' },
-                          { id: 'bp-li-' + Date.now(), platform: 'linkedin', caption: campaignResult.liCaption, status: 'published', publishedAt: 'Just Now via Batch Post', approvedBy: 'Patrick Latimore' },
+                          { id: 'bp-fb-' + Date.now(), platform: 'facebook', caption: campaignResult.fbCaption, status: 'published', publishedAt: 'Just Now via Batch Post', approvedBy: 'Jackson Latimore' },
+                          { id: 'bp-ig-' + Date.now(), platform: 'instagram', caption: campaignResult.igCaption, status: 'published', publishedAt: 'Just Now via Batch Post', approvedBy: 'Jackson Latimore' },
+                          { id: 'bp-li-' + Date.now(), platform: 'linkedin', caption: campaignResult.liCaption, status: 'published', publishedAt: 'Just Now via Batch Post', approvedBy: 'Jackson Latimore' },
                           ...prev
                         ]);
                         alert('Batch publication complete! Facebook, Instagram, and LinkedIn channels initialized. Real-time metrics tracking pipeline established.');
@@ -1179,7 +1179,7 @@ export const MarketingDashboard: React.FC = () => {
                           <span className="font-bold text-slate-700">LinkedIn Pipeline Preview</span>
                         </div>
                         <div className="p-4 space-y-3">
-                          <p className="font-bold text-slate-800">Patrick Latimore • Managing Partner, Latimore LLC</p>
+                          <p className="font-bold text-slate-800">Jackson Latimore • Founder & CEO, Latimore Life & Legacy LLC</p>
                           <p className="leading-relaxed text-slate-700">{campaignResult.liCaption}</p>
                           <div className="w-full h-36 border bg-slate-50 flex items-center justify-center">
                             <span className="text-slate-400 text-[10px] font-bold text-center px-4">Interactive PDF Succession Guide Attachment Mockup</span>
