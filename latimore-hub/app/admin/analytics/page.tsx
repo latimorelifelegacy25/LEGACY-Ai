@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 
 interface AnalyticsData {
   totalInquiries: number
@@ -16,11 +16,7 @@ export default function AnalyticsPage() {
   const [loading, setLoading] = useState(true)
   const [dateRange, setDateRange] = useState('30')
 
-  useEffect(() => {
-    fetchAnalytics()
-  }, [dateRange])
-
-  const fetchAnalytics = async () => {
+  const fetchAnalytics = useCallback(async () => {
     setLoading(true)
     try {
       const response = await fetch(`/api/analytics?days=${dateRange}`)
@@ -31,7 +27,11 @@ export default function AnalyticsPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [dateRange])
+
+  useEffect(() => {
+    fetchAnalytics()
+  }, [fetchAnalytics])
 
   if (loading) {
     return (

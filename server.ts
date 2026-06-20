@@ -1,37 +1,26 @@
-
-import express from "express";
+import express, { type Request, type Response, type NextFunction } from "express";
 import path from "path";
 import { createServer as createViteServer } from "vite";
-import { GoogleGenAI, Type } from "@google/genai";
+import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
 
 dotenv.config();
 
-async function startServer() {
-  const app = express();
-  const PORT = 3000;
+const PORT = Number(process.env.PORT || 3000);
+const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash";
+const MAX_JSON_BODY = process.env.MAX_JSON_BODY || "1mb";
+const MAX_HISTORY_MESSAGES = 25;
+const MAX_TEXT_CHARS = 12_000;
 
-  app.use(express.json());
-
-  // Gemini Setup
-  const ai = new GoogleGenAI({
-    apiKey: process.env.GEMINI_API_KEY,
-    httpOptions: {
-      headers: {
-        'User-Agent': 'aistudio-build',
-      }
-    }
-  });
-
-  const AGENT_SYSTEM_PROMPT = `
+const AGENT_SYSTEM_PROMPT = `
 You are the Latimore Hub OS Copilot, a high-performance AI assistant for Latimore Life & Legacy LLC.
-Your goal is to help the user manage their business operations, revenue engine, and daily tasks.
+Your goal is to help Jackson M. Latimore Sr. manage business operations, revenue engine, and daily tasks.
 
 Context:
 - Business: Latimore Life & Legacy LLC (Insurance & Legacy Planning)
 - Motto: Protecting Today. Securing Tomorrow. #TheBeatGoesOn
-- Primary Markets: Schuylkill County, Coal Region, Luzerne County (Latino Market)
-- Key People: Patrick Latimore (Principal)
+- Primary Markets: Schuylkill County, Coal Region, Luzerne County, and Northumberland County
+- Key People: Jackson M. Latimore Sr. (Founder & CEO)
 
 Capabilities:
 You can interact with a simulated file system to read and write documents.
@@ -42,7 +31,7 @@ You can interact with a simulated file system to read and write documents.
 Response Format:
 You MUST respond in JSON format ONLY:
 {
-  "thought": "Your reasoning for the action or response",
+  "thought": "Your brief rationale for the action or response",
   "content": "The text message to display to the user",
   "actions": [
     { "type": "FILE_READ", "payload": "filename.md" },
@@ -54,68 +43,138 @@ If no action is needed, send an empty array for "actions".
 Keep your tone professional, strategic, and mission-aligned.
 `;
 
-  // API Routes
+function createAiClient(): GoogleGenAI | null {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) return null;
+  return new GoogleGenAI({
+    apiKey,
+    httpOptions: {
+      headers: {
+        "User-Agent": "latimore-hub-os",
+      },
+    },
+  });
+}
+
+function truncateText(value: unknown, maxChars = MAX_TEXT_CHARS): string {
+  if (typeof value !== "string") return "";
+  return value.length > maxChars ? `${value.slice(0, maxChars)}…` : value;
+}
+
+function safeJsonParse(text: string): Record<string, any> {
+  try {
+    return JSON.parse(text || "{}");
+  } catch {
+    const match = text.match(/\{[\s\S]*\}/);
+    if (!match) return {};
+    try {
+      return JSON.parse(match[0]);
+    } catch {
+      return {};
+    }
+  }
+}
+
+function securityHeaders(_req: Request, res: Response, next: NextFunction) {
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+  res.setHeader("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
+  next();
+}
+
+async function startServer() {
+  const app = express();
+  const ai = createAiClient();
+
+  app.disable("x-powered-by");
+  app.use(securityHeaders);
+  app.use(express.json({ limit: MAX_JSON_BODY }));
+
+  app.get("/api/health", (_req, res) => {
+    res.json({
+      ok: true,
+      service: "Latimore Hub OS",
+      aiConfigured: Boolean(process.env.GEMINI_API_KEY),
+      model: GEMINI_MODEL,
+      timestamp: new Date().toISOString(),
+    });
+  });
+
   app.post("/api/chat", async (req, res) => {
     try {
-      const { message, history, fileSystem } = req.body;
-      
+      if (!ai) {
+        return res.status(503).json({
+          error: "GEMINI_API_KEY is not configured on the server.",
+        });
+      }
+
+      const message = truncateText(req.body?.message);
+      const history = Array.isArray(req.body?.history) ? req.body.history.slice(-MAX_HISTORY_MESSAGES) : [];
+      const fileSystem = req.body?.fileSystem ?? {};
+
+      if (!message.trim()) {
+        return res.status(400).json({ error: "Message is required." });
+      }
+
       const contents = [
-        { 
-          role: 'model', 
-          parts: [{ text: `Current File System State:\n${JSON.stringify(fileSystem, null, 2)}` }] 
+        {
+          role: "model",
+          parts: [{ text: `Current File System State:\n${truncateText(JSON.stringify(fileSystem, null, 2))}` }],
         },
         ...history.map((h: any) => {
-          let text = h.content;
-          if (h.role !== 'user' && (h.actions?.length > 0 || h.thought)) {
-            text = JSON.stringify({
+          const role = h?.role === "user" ? "user" : "model";
+          let text = truncateText(h?.content);
+          if (role !== "user" && (h?.actions?.length > 0 || h?.thought)) {
+            text = truncateText(JSON.stringify({
               thought: h.thought,
               content: h.content,
-              actions: h.actions
-            });
+              actions: h.actions,
+            }));
           }
-          return {
-            role: h.role === 'user' ? 'user' : 'model',
-            parts: [{ text }]
-          };
+          return { role, parts: [{ text }] };
         }),
-        { role: 'user', parts: [{ text: message }] }
+        { role: "user", parts: [{ text: message }] },
       ];
 
       const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
-        contents: contents,
+        model: GEMINI_MODEL,
+        contents,
         config: {
           systemInstruction: AGENT_SYSTEM_PROMPT,
           responseMimeType: "application/json",
         },
       });
 
-      const data = JSON.parse(response.text || "{}");
+      const data = safeJsonParse(response.text || "{}");
 
-      res.json({ 
-        role: 'agent',
-        content: data.content || "I've processed your request.",
-        actions: data.actions || [],
-        thought: data.thought,
-        timestamp: Date.now()
+      res.json({
+        role: "agent",
+        content: typeof data.content === "string" ? data.content : "I've processed your request.",
+        actions: Array.isArray(data.actions) ? data.actions : [],
+        thought: typeof data.thought === "string" ? data.thought : undefined,
+        timestamp: Date.now(),
       });
     } catch (error: any) {
       console.error("Chat Error:", error);
-      res.status(500).json({ error: error.message });
+      res.status(500).json({ error: error.message || "Copilot request failed." });
     }
   });
 
-  // Sentiment and compliance AI analysis
   app.post("/api/ai/sentiment/analyze", async (req, res) => {
     try {
-      const { commentText, author } = req.body;
-      if (!commentText) {
+      if (!ai) {
+        return res.status(503).json({ error: "GEMINI_API_KEY is not configured on the server." });
+      }
+
+      const commentText = truncateText(req.body?.commentText, 4_000);
+      const author = truncateText(req.body?.author || "Unknown", 500);
+      if (!commentText.trim()) {
         return res.status(400).json({ error: "No comment content provided." });
       }
 
       const prompt = `Analyze the following social media comment and return a structured JSON response matching the schema.
 Comment text: "${commentText}"
-Author: "${author || "Unknown"}"
+Author: "${author}"
 
 The response MUST follow this exact JSON schema:
 {
@@ -130,23 +189,17 @@ The response MUST follow this exact JSON schema:
   "recommendedAction": "<string of on-brand reply draft starting with 'Reply with...' or relevant actions>"
 }
 
-Ensure the response is ONLY the raw JSON block without markdown formatting or codeblocks. Ensure compliance_risk flags are elevated to high or medium if the comment involves critical investment advice, claims procedures or regulated financial promises. Ensure the recommended action complies with the Latimore Life & Legacy LLC brand tone: "Protecting Today. Securing Tomorrow. #TheBeatGoesOn".`;
+Raise compliance_risk to medium or high if the comment involves investment advice, claims procedures, product guarantees, or regulated financial promises. Keep recommended actions aligned to Latimore Life & Legacy LLC: Protecting Today. Securing Tomorrow. #TheBeatGoesOn.`;
 
       const response = await ai.models.generateContent({
-        model: "gemini-3.5-flash",
+        model: GEMINI_MODEL,
         contents: prompt,
-        config: {
-          responseMimeType: "application/json",
-        }
+        config: { responseMimeType: "application/json" },
       });
 
-      const textOutput = response.text || "{}";
-      const cleaned = textOutput.trim().replace(/^```json\s*/i, "").replace(/```$/, "");
-      const analysisData = JSON.parse(cleaned);
-      res.json(analysisData);
+      res.json(safeJsonParse(response.text || "{}"));
     } catch (error: any) {
       console.error("Sentiment API error:", error);
-      // Fallback response inside the API so it never crashes
       res.json({
         sentiment: "neutral",
         confidence: 0.85,
@@ -156,12 +209,11 @@ Ensure the response is ONLY the raw JSON block without markdown formatting or co
         trending_terms: ["general"],
         lead_potential: "medium",
         compliance_risk: "none",
-        recommendedAction: "Reply thanking them for reaching out to Latimore Life & Legacy and offer a confidential consultation. #TheBeatGoesOn"
+        recommendedAction: "Reply thanking them for reaching out to Latimore Life & Legacy and offer a confidential consultation. #TheBeatGoesOn",
       });
     }
   });
 
-  // Vite integration
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
       server: { middlewareMode: true },
@@ -169,10 +221,13 @@ Ensure the response is ONLY the raw JSON block without markdown formatting or co
     });
     app.use(vite.middlewares);
   } else {
-    const distPath = path.join(process.cwd(), 'dist');
+    const distPath = path.join(process.cwd(), "dist");
     app.use(express.static(distPath));
-    app.get('*', (req, res) => {
-      res.sendFile(path.join(distPath, 'index.html'));
+    app.get(/.*/, (req, res) => {
+      if (req.path.startsWith("/api/")) {
+        return res.status(404).json({ error: "API route not found." });
+      }
+      res.sendFile(path.join(distPath, "index.html"));
     });
   }
 
@@ -181,4 +236,7 @@ Ensure the response is ONLY the raw JSON block without markdown formatting or co
   });
 }
 
-startServer();
+startServer().catch((error) => {
+  console.error("Server startup failed:", error);
+  process.exit(1);
+});

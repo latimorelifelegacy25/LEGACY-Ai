@@ -110,15 +110,15 @@ const App: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    // Dynamic Google Analytics GA4 Loader for NEXT_PUBLIC_MAIN_GA4_ID=G-S0Q3E4DEBJ
-    const trackingId = 'G-S0Q3E4DEBJ';
+    // Dynamic Google Analytics GA4 Loader. Only NEXT_PUBLIC_* data is exposed to the browser.
+    const trackingId = import.meta.env.VITE_GA4_MEASUREMENT_ID || 'G-S0Q3E4DEBJ';
     const script1 = document.createElement('script');
     script1.async = true;
     script1.src = `https://www.googletagmanager.com/gtag/js?id=${trackingId}`;
     document.head.appendChild(script1);
 
     const script2 = document.createElement('script');
-    script2.innerHTML = `
+    script2.textContent = `
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
@@ -170,14 +170,14 @@ const App: React.FC = () => {
     setActiveTab('dashboard');
   };
   const [tasks, setTasks] = useState<Task[]>([
-    { text: "Pay PAHS CampusBox balance — $460 DUE TODAY 05/18/2026", pri: "high", done: false },
-    { text: "Follow up with Schuylkill Chamber EVP Samantha Chivinski re: Finance & Admin Coordinator role", pri: "high", done: false },
-    { text: "Submit LAT-2026-01 pre-suit demand package to Diocese of Allentown", pri: "high", done: false },
+    { text: "Review today's highest-priority client follow-ups", pri: "high", done: false },
+    { text: "Confirm all booked consultations for the next 48 hours", pri: "high", done: false },
+    { text: "Process urgent operations and compliance items", pri: "high", done: false },
     { text: "Review North American carrier appointment paperwork", pri: "med", done: false },
     { text: "Deploy Latimore Hub OS leads dashboard admin page to Vercel", pri: "med", done: false },
     { text: "Activate PAHS Full Circle Legacy QR funnel on latimorelifelegacy.com", pri: "med", done: false },
     { text: "Build Luzerne County Latino market landing page", pri: "low", done: false },
-    { text: "Verify GA4 events — G-WZWMX83WXQ and G-S0Q3E4DEBJ", pri: "low", done: false },
+    { text: "Verify GA4 conversion events for active funnels", pri: "low", done: false },
   ]);
 
   const [revOutput, setRevOutput] = useState('Select your ICP, asset type, and KPI — then hit Generate to build on-brand revenue content.');
@@ -760,8 +760,8 @@ const App: React.FC = () => {
   const logs: LogEntry[] = [
     { time: "09:14", cls: "text-emerald-400", msg: "✓ Latimore Hub OS — Vercel build passed" },
     { time: "09:10", cls: "text-blue-400", msg: "→ Supabase medxfhhxvmczmpurkmrp — schema sync OK" },
-    { time: "08:55", cls: "text-emerald-400", msg: "✓ GA4 G-WZWMX83WXQ — events firing correctly" },
-    { time: "08:40", cls: "text-amber-400", msg: "⚠ PAHS invoice $460 — DUE TODAY 05/18/2026" },
+    { time: "08:55", cls: "text-emerald-400", msg: "✓ GA4 conversion events checked" },
+    { time: "08:40", cls: "text-amber-400", msg: "⚠ Review time-sensitive operations queue" },
     { time: "08:30", cls: "text-blue-400", msg: "→ Brand guardrails loaded — all workflows active" },
     { time: "Yesterday", cls: "text-emerald-400", msg: "✓ LAT-2026-01 complaint package — finalized" },
   ];

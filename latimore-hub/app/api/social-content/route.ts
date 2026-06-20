@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
@@ -30,7 +32,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ 
       ok: true, 
       created: contentPieces.length,
-      ids: contentPieces.map(cp => cp.id)
+      ids: contentPieces.map((cp: { id: string }) => cp.id)
     })
   } catch (error) {
     console.error('Error saving social content:', error)

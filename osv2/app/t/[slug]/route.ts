@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { redirect } from 'next/navigation';
 import { NextRequest } from 'next/server';
 import { db } from '@/lib/db/client';

@@ -18,7 +18,10 @@ Open the local Vite URL and click **Sign In with Local Admin**.
 ```bash
 VITE_AUTH_PROVIDER="local"
 VITE_DATA_PROVIDER="local"
-VITE_GEMINI_API_KEY=""
+VITE_AI_API_BASE_URL="https://your-api-domain.example"
+VITE_GEMINI_MODEL="gemini-2.5-flash"
+# Local-only fallback; do not deploy public AI keys.
+# VITE_GEMINI_API_KEY=""
 GEMINI_API_KEY=""
 VITE_GEMINI_MODEL="gemini-2.5-flash"
 VITE_SUPABASE_URL=""
@@ -28,7 +31,7 @@ VITE_SUPABASE_ANON_KEY=""
 
 ### Gemini AI content tools
 
-The AI content and personalized email tools use `VITE_GEMINI_API_KEY` first, then fall back to legacy `GEMINI_API_KEY`. The default model is `gemini-2.5-flash`; override it with `VITE_GEMINI_MODEL` if needed.
+The AI content and personalized email tools use `VITE_AI_API_BASE_URL` in production. `VITE_GEMINI_API_KEY` is retained only as a local-development fallback because Vite variables are browser-visible.
 
 ## Production modes
 
